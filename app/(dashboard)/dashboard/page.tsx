@@ -75,7 +75,12 @@ function DashboardContent() {
         toast.error("El pago no fue completado")
         return
       }
-      await api.post("/api/sites", { name, subdomain, plan })
+      const site = await api.post<{ id: string }>("/api/sites", { name, subdomain, plan })
+      try {
+        await api.post("/api/stripe/attach-subscription", { sessionId, siteId: site.id })
+      } catch (err: any) {
+        toast.error(err?.message || "Error al vincular la suscripción")
+      }
       sessionStorage.removeItem("wpfacil_create_name")
       sessionStorage.removeItem("wpfacil_create_subdomain")
       sessionStorage.removeItem("wpfacil_create_plan")
