@@ -52,18 +52,21 @@ export default function CreateSitePage() {
       toast.error("Completa todos los campos")
       return
     }
+    const plan = plans.find((p) => p.slug === selectedPlan)
+    if (!plan) { toast.error("Plan no encontrado"); return }
+    if (!plan.priceId) {
+      toast.error("Este plan no tiene un precio configurado en Stripe")
+      return
+    }
     setLoading(true)
     try {
-      await api.post("/api/sites", {
-        name: form.name,
-        subdomain: form.subdomain,
-        plan: selectedPlan,
-      })
-      toast.success("Sitio creado. Desplegando...")
-      router.push("/dashboard")
+      sessionStorage.setItem("wpfacil_create_name", form.name)
+      sessionStorage.setItem("wpfacil_create_subdomain", form.subdomain)
+      sessionStorage.setItem("wpfacil_create_plan", selectedPlan)
+      const res = await api.post<{ url: string }>("/api/stripe/checkout", { planId: plan.id })
+      window.location.href = res.url
     } catch (err: any) {
-      toast.error(err?.message || "Error al crear el sitio")
-    } finally {
+      toast.error(err?.message || "Error al iniciar el pago")
       setLoading(false)
     }
   }
@@ -179,10 +182,6 @@ export default function CreateSitePage() {
                             <span className="text-sm font-normal text-muted-foreground">/mes</span>
                           </p>
                           <ul className="space-y-2 text-sm">
-                            <li className="flex items-center gap-2">
-                              <Check className="size-4 text-green-500" />
-                              {plan.maxSites} {plan.maxSites === 1 ? "sitio" : "sitios"}
-                            </li>
                             <li className="flex items-center gap-2">
                               <Check className="size-4 text-green-500" />
                               {plan.maxStorage >= 1024

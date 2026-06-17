@@ -107,6 +107,9 @@ export default function SiteDetailPage() {
   async function handleDelete() {
     try {
       await api.delete(`/api/sites/${id}`)
+      const notifs = JSON.parse(localStorage.getItem("wpfacil_notifications") || "[]")
+      notifs.unshift({ id: Date.now(), text: `Sitio eliminado`, time: new Date().toISOString() })
+      localStorage.setItem("wpfacil_notifications", JSON.stringify(notifs.slice(0, 20)))
       toast.success("Sitio eliminado")
       router.push("/dashboard")
     } catch {

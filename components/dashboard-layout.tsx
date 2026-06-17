@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, CreditCard, Shield, Sun, Moon } from "lucide-react"
+import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell } from "lucide-react"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -26,7 +26,25 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
   const router = useRouter()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const [notifications, setNotifications] = React.useState<{ id: number; text: string; time: string }[]>([])
   React.useEffect(() => setMounted(true), [])
+  React.useEffect(() => {
+    const raw = localStorage.getItem("wpfacil_notifications")
+    if (raw) {
+      try { setNotifications(JSON.parse(raw)) } catch {}
+    }
+    const handler = () => {
+      const r = localStorage.getItem("wpfacil_notifications")
+      if (r) { try { setNotifications(JSON.parse(r)) } catch {} }
+    }
+    window.addEventListener("storage", handler)
+    return () => window.removeEventListener("storage", handler)
+  }, [])
+
+  function clearNotifications() {
+    localStorage.removeItem("wpfacil_notifications")
+    setNotifications([])
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -40,6 +58,42 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {mounted && theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="size-4" />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                      {notifications.length > 9 ? "9+" : notifications.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72">
+                <DropdownMenuLabel>Notificaciones</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {notifications.length === 0 ? (
+                  <p className="px-2 py-4 text-center text-sm text-muted-foreground">Sin notificaciones</p>
+                ) : (
+                  notifications.slice(0, 10).map((n) => (
+                    <div key={n.id} className="px-2 py-2 text-sm">
+                      <p>{n.text}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {new Date(n.time).toLocaleString("es-ES")}
+                      </p>
+                    </div>
+                  ))
+                )}
+                {notifications.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={clearNotifications} className="justify-center text-sm text-muted-foreground">
+                      Limpiar notificaciones
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">

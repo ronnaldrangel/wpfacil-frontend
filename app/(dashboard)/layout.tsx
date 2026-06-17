@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { getToken, removeToken, api } from "@/lib/api-client"
+import { Loader2 } from "lucide-react"
 
 export default function DashboardRootLayout({
   children,
@@ -60,7 +61,7 @@ export default function DashboardRootLayout({
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Cargando...</p>
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     )
   }

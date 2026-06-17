@@ -161,7 +161,7 @@ export default function AdminSubscriptionsPage() {
       render: (v: unknown) => (v as any)?.name || "—",
     },
     {
-      key: "site",
+      key: "user",
       label: "Usuario",
       render: (v: unknown) => (v as any)?.user?.name || "—",
     },

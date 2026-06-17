@@ -2,11 +2,12 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { SiteCard } from "@/components/site-card"
-import { DeployingSkeleton } from "@/components/deploying-skeleton"
-import { Plus, Globe } from "lucide-react"
+import { Plus, Globe, Loader2 } from "lucide-react"
 import { api } from "@/lib/api-client"
+import { toast } from "sonner"
 
 interface Site {
   id: string
@@ -19,6 +20,26 @@ interface Site {
 }
 
 export default function DashboardPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Mis Sitios</h1>
+          <Button disabled><Plus className="mr-2 h-4 w-4" />Nuevo Sitio</Button>
+        </div>
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="size-8 animate-spin text-primary" />
+        </div>
+      </div>
+    }>
+      <DashboardContent />
+    </React.Suspense>
+  )
+}
+
+function DashboardContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [sites, setSites] = React.useState<Site[]>([])
   const [loading, setLoading] = React.useState(true)
 
@@ -41,7 +62,35 @@ export default function DashboardPage() {
     fetchSites()
   }, [])
 
-  const hasDeploying = sites.some((s) => s.status === "deploying")
+  React.useEffect(() => {
+    const sessionId = searchParams.get("session_id")
+    if (!sessionId) return
+    const name = sessionStorage.getItem("wpfacil_create_name")
+    const subdomain = sessionStorage.getItem("wpfacil_create_subdomain")
+    const plan = sessionStorage.getItem("wpfacil_create_plan")
+    if (!name || !subdomain || !plan) return
+
+    api.get<{ paid: boolean }>(`/api/stripe/session/${sessionId}`).then(async (session) => {
+      if (!session.paid) {
+        toast.error("El pago no fue completado")
+        return
+      }
+      await api.post("/api/sites", { name, subdomain, plan })
+      sessionStorage.removeItem("wpfacil_create_name")
+      sessionStorage.removeItem("wpfacil_create_subdomain")
+      sessionStorage.removeItem("wpfacil_create_plan")
+      const notifs = JSON.parse(localStorage.getItem("wpfacil_notifications") || "[]")
+      notifs.unshift({ id: Date.now(), text: `Sitio "${name}" creado exitosamente`, time: new Date().toISOString() })
+      localStorage.setItem("wpfacil_notifications", JSON.stringify(notifs.slice(0, 20)))
+      toast.success("Sitio creado. Desplegando...")
+      router.replace("/dashboard")
+      fetchSites()
+    }).catch(() => {
+      toast.error("Error al verificar el pago")
+    })
+  }, [searchParams])
+
+  const hasDeploying = sites.some((s) => s.status === "deploying" || s.status === "provisioning")
 
   React.useEffect(() => {
     if (!hasDeploying) return
@@ -54,11 +103,15 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Mis Sitios</h1>
+          <Link href="/create">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Sitio
+            </Button>
+          </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <DeployingSkeleton key={i} />
-          ))}
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="size-8 animate-spin text-primary" />
         </div>
       </div>
     )
@@ -95,7 +148,7 @@ export default function DashboardPage() {
           </Button>
         </Link>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-col gap-4">
         {sites.map((site) => (
           <SiteCard key={site.id} site={site} onDelete={handleDeleteSite} />
         ))}

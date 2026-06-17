@@ -18,9 +18,9 @@ const features = [
 ]
 
 const plans = [
-  { name: "Básico", slug: "basic", price: "$9.99", sites: "1 sitio", storage: "10 GB", popular: false },
-  { name: "Pro", slug: "pro", price: "$13.99", sites: "5 sitios", storage: "50 GB", popular: true },
-  { name: "Enterprise", slug: "enterprise", price: "$20.99", sites: "Ilimitados", storage: "200 GB", popular: false },
+  { name: "Básico", slug: "basic", price: "$9.99", storage: "10 GB", popular: false },
+  { name: "Pro", slug: "pro", price: "$13.99", storage: "50 GB", popular: true },
+  { name: "Enterprise", slug: "enterprise", price: "$20.99", storage: "200 GB", popular: false },
 ]
 
 const testimonials = [
@@ -117,6 +117,11 @@ export default function HomePage() {
                 <span className="text-xs text-muted-foreground">tiempo de despliegue</span>
               </div>
             </div>
+            <img
+              src="/hero/Fondo.png"
+              alt="WPFacil Dashboard"
+              className="mt-16 w-full"
+            />
           </div>
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--color-primary)_0%,_transparent_60%)] opacity-10" />
         </section>
@@ -214,10 +219,6 @@ export default function HomePage() {
                   </CardHeader>
                   <CardContent className="pt-6">
                     <ul className="space-y-3">
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-green-500 shrink-0" />
-                        {plan.sites}
-                      </li>
                       <li className="flex items-center gap-2 text-sm">
                         <Check className="size-4 text-green-500 shrink-0" />
                         {plan.storage} almacenamiento

@@ -50,6 +50,9 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
   async function handleDelete() {
     try {
       await api.delete(`/api/sites/${site.id}`)
+      const notifs = JSON.parse(localStorage.getItem("wpfacil_notifications") || "[]")
+      notifs.unshift({ id: Date.now(), text: `Sitio "${site.name}" eliminado`, time: new Date().toISOString() })
+      localStorage.setItem("wpfacil_notifications", JSON.stringify(notifs.slice(0, 20)))
       toast.success("Sitio eliminado")
       if (onDelete) onDelete(site.id)
       router.refresh()
@@ -69,56 +72,56 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
             <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-muted text-2xl font-bold text-muted-foreground">
               {site.name.charAt(0).toUpperCase()}
             </div>
-            <div className="space-y-1.5">
-            <a
-              href={`https://${domain}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-semibold text-blue-600 hover:underline"
-            >
-              {domain}
-              <ArrowUpRight className="ml-0.5 inline h-3 w-3" />
-            </a>
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-lg">{site.name}</h3>
-              <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground capitalize">
-                {site.plan}
-              </span>
+            <div className="space-y-0">
+              <a
+                href={`https://${domain}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                {domain}
+                <ArrowUpRight className="ml-0.5 inline h-3 w-3" />
+              </a>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-2xl">{site.name}</h3>
+                <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground capitalize">
+                  {site.plan}
+                </span>
+              </div>
+              <SiteStatusBadge status={site.status} />
             </div>
-            <SiteStatusBadge status={site.status} />
-          </div>
           </div>
           <div className="flex items-center gap-1 pt-1">
-              {isDeploying ? (
-                <Button variant="outline" size="sm" disabled>
+            {isDeploying ? (
+              <Button variant="outline" size="sm" disabled>
+                <Settings className="mr-1 h-3.5 w-3.5" />
+                Gestionar
+              </Button>
+            ) : (
+              <Link href={`/sites/${site.id}`}>
+                <Button variant="outline" size="sm">
                   <Settings className="mr-1 h-3.5 w-3.5" />
                   Gestionar
                 </Button>
-              ) : (
-                <Link href={`/sites/${site.id}`}>
-                  <Button variant="outline" size="sm">
-                    <Settings className="mr-1 h-3.5 w-3.5" />
-                    Gestionar
-                  </Button>
-                </Link>
-              )}
-              {isDeploying ? (
-                <Button variant="outline" size="sm" disabled>
+              </Link>
+            )}
+            {isDeploying ? (
+              <Button variant="outline" size="sm" disabled>
+                <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                WP Admin
+              </Button>
+            ) : (
+              <a
+                href={`https://${domain}/wp-admin`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="sm">
                   <ExternalLink className="mr-1 h-3.5 w-3.5" />
                   WP Admin
                 </Button>
-              ) : (
-                <a
-                  href={`https://${domain}/wp-admin`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                    WP Admin
-                  </Button>
-                </a>
-              )}
+              </a>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -126,7 +129,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => {}}>Editar</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { }}>Editar</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

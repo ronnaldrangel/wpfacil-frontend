@@ -14,9 +14,20 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Edit, Plus, Loader2 } from "lucide-react"
+import { Edit, Plus, Trash2, Loader2 } from "lucide-react"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Promise<void> }) {
   const [open, setOpen] = React.useState(false)
@@ -25,7 +36,6 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
     name: plan.name,
     price: Number(plan.price),
     priceId: plan.priceId || "",
-    maxSites: plan.maxSites,
     maxStorage: plan.maxStorage,
     isActive: plan.isActive,
   })
@@ -35,7 +45,6 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
       name: plan.name,
       price: Number(plan.price),
       priceId: plan.priceId || "",
-      maxSites: plan.maxSites,
       maxStorage: plan.maxStorage,
       isActive: plan.isActive,
     })
@@ -47,7 +56,6 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
       const payload: any = {
         name: form.name,
         price: form.price,
-        maxSites: form.maxSites,
         maxStorage: form.maxStorage,
         isActive: form.isActive,
       }
@@ -90,15 +98,9 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
             <Input id="plan-priceId" placeholder="price_..." value={form.priceId} onChange={(e) => setForm({ ...form, priceId: e.target.value })} />
             <p className="text-xs text-muted-foreground">Crea el producto y precio en Stripe y pega el Price ID aquí</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="plan-sites">Máx. Sitios</Label>
-              <Input id="plan-sites" type="number" value={form.maxSites} onChange={(e) => setForm({ ...form, maxSites: parseInt(e.target.value) || 0 })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="plan-storage">Almacenamiento (GB)</Label>
-              <Input id="plan-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="plan-storage">Almacenamiento (GB)</Label>
+            <Input id="plan-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -131,7 +133,6 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
     slug: "",
     price: 0,
     priceId: "",
-    maxSites: 1,
     maxStorage: 10,
     isActive: true,
   })
@@ -147,7 +148,6 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
         name: form.name,
         slug: form.slug,
         price: form.price,
-        maxSites: form.maxSites,
         maxStorage: form.maxStorage,
         isActive: form.isActive,
       }
@@ -156,7 +156,7 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
       await api.post("/api/admin/plans", payload)
       toast.success("Plan creado")
       setOpen(false)
-      setForm({ name: "", slug: "", price: 0, priceId: "", maxSites: 1, maxStorage: 10, isActive: true })
+      setForm({ name: "", slug: "", price: 0, priceId: "", maxStorage: 10, isActive: true })
       onCreated()
     } catch (err: any) {
       toast.error(err?.message || "Error al crear plan")
@@ -202,15 +202,9 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
             <Input id="create-priceId" placeholder="price_..." value={form.priceId} onChange={(e) => setForm({ ...form, priceId: e.target.value })} />
             <p className="text-xs text-muted-foreground">Crea el producto y precio en Stripe y pega el Price ID aquí</p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="create-sites">Máx. Sitios</Label>
-              <Input id="create-sites" type="number" value={form.maxSites} onChange={(e) => setForm({ ...form, maxSites: parseInt(e.target.value) || 0 })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="create-storage">Almacenamiento (GB)</Label>
-              <Input id="create-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-storage">Almacenamiento (GB)</Label>
+            <Input id="create-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="flex items-center gap-2">
             <input
@@ -238,6 +232,8 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
 export default function AdminPlansPage() {
   const [loading, setLoading] = React.useState(true)
   const [plans, setPlans] = React.useState<any[]>([])
+  const [preloading, setPreloading] = React.useState(false)
+  const [syncing, setSyncing] = React.useState(false)
 
   async function fetchPlans() {
     try {
@@ -252,6 +248,33 @@ export default function AdminPlansPage() {
 
   React.useEffect(() => { fetchPlans() }, [])
 
+  async function handlePreload() {
+    setPreloading(true)
+    try {
+      const res = await api.post<{ results: { action: string; slug: string }[] }>("/api/admin/plans/preload")
+      const created = res.results.filter((r) => r.action === "created")
+      toast.success(`${created.length} plan(es) creados`)
+      await fetchPlans()
+    } catch {
+      toast.error("Error al precargar planes")
+    } finally {
+      setPreloading(false)
+    }
+  }
+
+  async function handleSync() {
+    setSyncing(true)
+    try {
+      const res = await api.post<{ synced: { slug: string; priceId: string }[] }>("/api/admin/plans/sync-stripe")
+      toast.success(`${res.synced.length} plan(es) sincronizados con Stripe`)
+      await fetchPlans()
+    } catch {
+      toast.error("Error al sincronizar con Stripe")
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   const columns = [
     { key: "name", label: "Nombre" },
     { key: "slug", label: "Slug" },
@@ -264,11 +287,6 @@ export default function AdminPlansPage() {
       key: "priceId",
       label: "Stripe Price ID",
       render: (v: unknown) => (v ? String(v) : "—"),
-    },
-    {
-      key: "maxSites",
-      label: "Máx. Sitios",
-      render: (v: unknown) => String(v),
     },
     {
       key: "maxStorage",
@@ -299,6 +317,40 @@ export default function AdminPlansPage() {
               setPlans(plans.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)))
             }}
           />
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Eliminar Plan</AlertDialogTitle>
+                <AlertDialogDescription>
+                  ¿Estás seguro de eliminar el plan <strong>{(row as any).name}</strong>?
+                  {(row as any).priceId && " También se archivará el producto asociado en Stripe."}
+                  Esta acción no se puede deshacer.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={async () => {
+                    try {
+                      await api.delete(`/api/admin/plans/${row.id}`)
+                      setPlans(plans.filter((p) => p.id !== row.id))
+                      toast.success("Plan eliminado")
+                    } catch (err: any) {
+                      toast.error(err?.message || "Error al eliminar plan")
+                    }
+                  }}
+                >
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       ),
     },
@@ -319,7 +371,17 @@ export default function AdminPlansPage() {
           <h1 className="text-2xl font-bold">Planes</h1>
           <p className="text-sm text-muted-foreground">Gestiona los planes de suscripción</p>
         </div>
-        <CreatePlanDialog onCreated={fetchPlans} />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handlePreload} disabled={preloading}>
+            {preloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Precargar planes
+          </Button>
+          <Button variant="outline" onClick={handleSync} disabled={syncing}>
+            {syncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Sync Stripe
+          </Button>
+          <CreatePlanDialog onCreated={fetchPlans} />
+        </div>
       </div>
       <AdminDataTable columns={columns} data={plans as unknown as Record<string, unknown>[]} searchKey="name" />
     </div>
