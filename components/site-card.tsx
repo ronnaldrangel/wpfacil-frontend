@@ -69,7 +69,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-24 shrink-0 items-center justify-center rounded-md bg-muted text-2xl font-bold text-muted-foreground">
+            <div className="flex h-24 w-32 shrink-0 items-center justify-center rounded-md bg-muted text-2xl font-bold text-muted-foreground">
               {site.name.charAt(0).toUpperCase()}
             </div>
             <div className="space-y-0">
@@ -77,7 +77,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 href={`https://${domain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold text-primary hover:underline"
+                className="text-base font-semibold text-primary hover:underline"
               >
                 {domain}
                 <ArrowUpRight className="ml-0.5 inline h-3 w-3" />
@@ -98,7 +98,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 Gestionar
               </Button>
             ) : (
-              <Link href={`/sites/${site.id}`}>
+              <Link href={`/dashboard/${site.id}`}>
                 <Button variant="outline" size="sm">
                   <Settings className="mr-1 h-3.5 w-3.5" />
                   Gestionar
