@@ -68,12 +68,13 @@ export default function AdminLayout({
       {impersonating && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 px-4 py-2 text-center text-sm font-medium text-yellow-950">
           Modo Administrador - Estás impersonando a un usuario
-          <button
+          <Button
+            variant="link"
             onClick={handleStopImpersonating}
-            className="ml-3 underline hover:no-underline"
+            className="ml-3 h-auto p-0 text-yellow-950 underline hover:no-underline"
           >
             Volver al panel admin
-          </button>
+          </Button>
         </div>
       )}
 

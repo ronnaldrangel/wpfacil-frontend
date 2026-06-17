@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { api, getToken, removeToken } from "@/lib/api-client"
 import { Loader2, Save } from "lucide-react"
 import { toast } from "sonner"
@@ -59,19 +61,12 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Perfil</h1>
-        <p className="text-sm text-muted-foreground">Gestiona tu información personal</p>
-      </div>
+      <PageHeader title="Perfil" description="Gestiona tu información personal" />
 
       <Card>
         <CardHeader>

@@ -55,62 +55,56 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <div className="flex justify-center">
-        <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-10 w-auto dark:hidden" />
-        <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-10 w-auto dark:block" />
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Iniciar Sesión</CardTitle>
-          <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@correo.com"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                  <Link
-                    href="/forgot-password"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-                <PasswordInput
-                  id="password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                />
-              </Field>
-              <Field>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading && <Loader2 data-icon="inline-start" />}
-                  Iniciar sesión
-                </Button>
-                <FieldDescription className="text-center">
-                  ¿No tienes cuenta?{" "}
-                  <Link href="/register">Crear cuenta</Link>
-                </FieldDescription>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className={cn(className)} {...props}>
+      <CardHeader>
+        <CardTitle>Iniciar Sesión</CardTitle>
+        <CardDescription>Ingresa tus credenciales para acceder</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tu@correo.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </Field>
+            <Field>
+              <div className="flex items-center">
+                <FieldLabel htmlFor="password">Contraseña</FieldLabel>
+                <Link
+                  href="/forgot-password"
+                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+              <PasswordInput
+                id="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+              />
+            </Field>
+            <Field>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 data-icon="inline-start" />}
+                Iniciar sesión
+              </Button>
+              <FieldDescription className="text-center">
+                ¿No tienes cuenta?{" "}
+                <Link href="/register">Crear cuenta</Link>
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

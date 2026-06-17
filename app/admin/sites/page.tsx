@@ -25,6 +25,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Trash2, RefreshCw, Loader2, ExternalLink } from "lucide-react"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 
@@ -130,6 +132,7 @@ export default function AdminSitesPage() {
     {
       key: "user",
       label: "Usuario",
+      className: "hidden md:table-cell",
       render: (v: unknown) => (v as any)?.name || "—",
     },
     {
@@ -147,7 +150,7 @@ export default function AdminSitesPage() {
         </a>
       ),
     },
-    { key: "plan", label: "Plan", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
+    { key: "plan", label: "Plan", className: "hidden md:table-cell", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
     {
       key: "status",
       label: "Estado",
@@ -156,6 +159,7 @@ export default function AdminSitesPage() {
     {
       key: "createdAt",
       label: "Creado",
+      className: "hidden lg:table-cell",
       render: (v: unknown) =>
         new Date(v as string).toLocaleDateString("es-ES", {
           day: "numeric",
@@ -187,19 +191,12 @@ export default function AdminSitesPage() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Sitios</h1>
-        <p className="text-sm text-muted-foreground">Gestiona todos los sitios de la plataforma</p>
-      </div>
+      <PageHeader title="Sitios" description="Gestiona todos los sitios de la plataforma" />
       <AdminDataTable columns={columns} data={sites as unknown as Record<string, unknown>[]} searchKey="name" />
     </div>
   )

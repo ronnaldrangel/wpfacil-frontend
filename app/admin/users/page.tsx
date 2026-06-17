@@ -5,6 +5,7 @@ import { AdminDataTable } from "@/components/admin-data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -26,6 +27,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { api, setToken } from "@/lib/api-client"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { Edit, Trash2, Eye, ShieldCheck, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -75,12 +78,12 @@ function EditUserDialog({ user, onSave }: { user: any; onSave: (data: any) => Pr
             <Input id="edit-email" type="email" value={user.email} disabled className="bg-muted" />
           </div>
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="edit-isAdmin"
               checked={form.isAdmin}
-              onChange={(e) => setForm({ ...form, isAdmin: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              onCheckedChange={(checked) =>
+                setForm({ ...form, isAdmin: checked === true })
+              }
             />
             <Label htmlFor="edit-isAdmin" className="text-sm font-normal">Administrador</Label>
           </div>
@@ -168,15 +171,17 @@ export default function AdminUsersPage() {
   const columns = [
     { key: "name", label: "Nombre", render: (v: unknown) => String(v || "—") },
     { key: "email", label: "Email" },
-    { key: "_count", label: "Sitios", render: (v: unknown) => String((v as any)?.sites || 0) },
+    { key: "_count", label: "Sitios", className: "hidden md:table-cell", render: (v: unknown) => String((v as any)?.sites || 0) },
     {
       key: "isAdmin",
       label: "Admin",
+      className: "hidden md:table-cell",
       render: (v: unknown) => (v ? "Sí" : "No"),
     },
     {
       key: "emailVerified",
       label: "Verificado",
+      className: "hidden md:table-cell",
       render: (v: unknown, row: Record<string, unknown>) => (
         <div className="flex items-center gap-2">
           <span className={v ? "text-green-600" : "text-muted-foreground"}>
@@ -205,6 +210,7 @@ export default function AdminUsersPage() {
     {
       key: "createdAt",
       label: "Creado",
+      className: "hidden lg:table-cell",
       render: (v: unknown) =>
         new Date(v as string).toLocaleDateString("es-ES", {
           day: "numeric",
@@ -244,19 +250,12 @@ export default function AdminUsersPage() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Usuarios</h1>
-        <p className="text-sm text-muted-foreground">Gestiona los usuarios de la plataforma</p>
-      </div>
+      <PageHeader title="Usuarios" description="Gestiona los usuarios de la plataforma" />
       <AdminDataTable columns={columns} data={users as unknown as Record<string, unknown>[]} searchKey="name" />
     </div>
   )

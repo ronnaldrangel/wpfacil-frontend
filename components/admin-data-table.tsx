@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 interface Column {
   key: string
   label: string
+  className?: string
   render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode
 }
 
@@ -52,7 +53,9 @@ export function AdminDataTable({ columns, data, searchKey }: AdminDataTableProps
           <TableHeader>
             <TableRow>
               {columns.map((col) => (
-                <TableHead key={col.key}>{col.label}</TableHead>
+                <TableHead key={col.key} className={col.className}>
+                  {col.label}
+                </TableHead>
               ))}
             </TableRow>
           </TableHeader>
@@ -67,7 +70,7 @@ export function AdminDataTable({ columns, data, searchKey }: AdminDataTableProps
               paginated.map((row, i) => (
                 <TableRow key={i}>
                   {columns.map((col) => (
-                    <TableCell key={col.key}>
+                    <TableCell key={col.key} className={col.className}>
                       {col.render
                         ? col.render(row[col.key], row)
                         : String(row[col.key] ?? "")}

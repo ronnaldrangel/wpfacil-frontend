@@ -5,6 +5,7 @@ import { AdminDataTable } from "@/components/admin-data-table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Edit, Plus, Trash2, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 import {
@@ -103,12 +107,12 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
             <Input id="plan-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="plan-active"
               checked={form.isActive}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              onCheckedChange={(checked) =>
+                setForm({ ...form, isActive: checked === true })
+              }
             />
             <Label htmlFor="plan-active" className="text-sm font-normal">Plan activo</Label>
           </div>
@@ -207,12 +211,12 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
             <Input id="create-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="create-active"
               checked={form.isActive}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              className="h-4 w-4 rounded border-gray-300"
+              onCheckedChange={(checked) =>
+                setForm({ ...form, isActive: checked === true })
+              }
             />
             <Label htmlFor="create-active" className="text-sm font-normal">Plan activo</Label>
           </div>
@@ -277,7 +281,7 @@ export default function AdminPlansPage() {
 
   const columns = [
     { key: "name", label: "Nombre" },
-    { key: "slug", label: "Slug" },
+    { key: "slug", label: "Slug", className: "hidden md:table-cell" },
     {
       key: "price",
       label: "Precio",
@@ -286,24 +290,22 @@ export default function AdminPlansPage() {
     {
       key: "priceId",
       label: "Stripe Price ID",
+      className: "hidden lg:table-cell",
       render: (v: unknown) => (v ? String(v) : "—"),
     },
     {
       key: "maxStorage",
       label: "Almacenamiento (GB)",
+      className: "hidden md:table-cell",
       render: (v: unknown) => String(v),
     },
     {
       key: "isActive",
       label: "Activo",
       render: (v: unknown) => (
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-            v ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
-          }`}
-        >
+        <Badge variant={v ? "default" : "secondary"}>
           {v ? "Sí" : "No"}
-        </span>
+        </Badge>
       ),
     },
     {
@@ -357,21 +359,14 @@ export default function AdminPlansPage() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Planes</h1>
-          <p className="text-sm text-muted-foreground">Gestiona los planes de suscripción</p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <PageHeader title="Planes" description="Gestiona los planes de suscripción" />
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={handlePreload} disabled={preloading}>
             {preloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Precargar planes

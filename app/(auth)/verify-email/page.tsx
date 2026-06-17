@@ -65,12 +65,8 @@ function VerifyForm() {
 
 export default function VerifyEmailPage() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <React.Suspense fallback={<div className="text-center py-8"><Loader2 className="size-8 animate-spin mx-auto" /></div>}>
-          <VerifyForm />
-        </React.Suspense>
-      </div>
-    </div>
+    <React.Suspense fallback={<div className="text-center py-8"><Loader2 className="size-8 animate-spin mx-auto" /></div>}>
+      <VerifyForm />
+    </React.Suspense>
   )
 }

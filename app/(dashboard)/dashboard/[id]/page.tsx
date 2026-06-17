@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +11,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { SiteStatusBadge } from "@/components/site-status-badge"
+import { PageLoader } from "@/components/page-loader"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -118,11 +120,7 @@ export default function SiteDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!site) return null
@@ -135,17 +133,19 @@ export default function SiteDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold">{site.name}</h1>
-          <p className="text-sm text-muted-foreground">{domain}</p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">{site.name}</h1>
+            <p className="text-sm text-muted-foreground">{domain}</p>
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-2 pl-14 sm:pl-0">
           <Badge variant="outline" className="capitalize">{site.plan}</Badge>
           <SiteStatusBadge status={site.status as any} />
         </div>
@@ -157,12 +157,7 @@ export default function SiteDetailPage() {
             <span className="text-sm text-muted-foreground">Almacenamiento</span>
             <span className="text-sm font-medium">{storageMB} MB / {storageLimitMB} MB</span>
           </div>
-          <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full rounded-full bg-primary transition-all"
-              style={{ width: `${Math.min(storagePercent, 100)}%` }}
-            />
-          </div>
+          <Progress value={Math.min(storagePercent, 100)} className="h-2.5" />
         </CardContent>
       </Card>
 

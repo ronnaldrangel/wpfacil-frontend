@@ -58,120 +58,104 @@ export default function RegisterPage() {
 
   if (registered) {
     return (
-      <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-        <div className="w-full max-w-sm">
-          <div className="flex flex-col gap-6">
-            <Card>
-              <CardHeader className="text-center">
-                <div className="flex justify-center mb-2">
-                  <MailCheck className="size-12 text-primary" />
-                </div>
-                <CardTitle>Revisa tu email</CardTitle>
-                <CardDescription>
-                  Te enviamos un enlace de verificación a <strong>{form.email}</strong>.
-                  Haz clic en el enlace para activar tu cuenta.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  ¿No recibiste el email? Revisa tu carpeta de spam o intenta de nuevo.
-                </p>
-                <Button variant="outline" className="w-full" onClick={() => setRegistered(false)}>
-                  Volver al registro
-                </Button>
-                <Link href="/login" className="text-center">
-                  <Button variant="link" className="w-full">Ir a iniciar sesión</Button>
-                </Link>
-              </CardContent>
-            </Card>
+      <Card>
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-2">
+            <MailCheck className="size-12 text-primary" />
           </div>
-        </div>
-      </div>
+          <CardTitle>Revisa tu email</CardTitle>
+          <CardDescription>
+            Te enviamos un enlace de verificación a <strong>{form.email}</strong>.
+            Haz clic en el enlace para activar tu cuenta.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground text-center">
+            ¿No recibiste el email? Revisa tu carpeta de spam o intenta de nuevo.
+          </p>
+          <Button variant="outline" className="w-full" onClick={() => setRegistered(false)}>
+            Volver al registro
+          </Button>
+          <Link href="/login" className="text-center">
+            <Button variant="link" className="w-full">Ir a iniciar sesión</Button>
+          </Link>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <div className="flex justify-center">
-            <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-10 w-auto dark:hidden" />
-            <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-10 w-auto dark:block" />
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Crear Cuenta</CardTitle>
-              <CardDescription>Regístrate para empezar a crear sitios</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit}>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="name">Nombre completo</FieldLabel>
-                    <Input
-                      id="name"
-                      placeholder="Tu nombre"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      required
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="tu@correo.com"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      required
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                    <PasswordInput
-                      id="password"
-                      placeholder="••••••••"
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      required
-                    />
-                    {form.password.length > 0 && (
-                      <div className="space-y-1 pt-1">
-                        {PASSWORD_RULES.map((rule, i) => {
-                          const valid = rule.test(form.password)
-                          return (
-                            <div key={i} className="flex items-center gap-2 text-xs">
-                              {valid ? (
-                                <Check className="size-3 text-green-500 shrink-0" />
-                              ) : (
-                                <X className="size-3 text-muted-foreground shrink-0" />
-                              )}
-                              <span className={valid ? "text-green-600" : "text-muted-foreground"}>
-                                {rule.label}
-                              </span>
-                            </div>
-                          )
-                        })}
+    <Card>
+      <CardHeader>
+        <CardTitle>Crear Cuenta</CardTitle>
+        <CardDescription>Regístrate para empezar a crear sitios</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="name">Nombre completo</FieldLabel>
+              <Input
+                id="name"
+                placeholder="Tu nombre"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tu@correo.com"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="password">Contraseña</FieldLabel>
+              <PasswordInput
+                id="password"
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+              />
+              {form.password.length > 0 && (
+                <div className="space-y-1 pt-1">
+                  {PASSWORD_RULES.map((rule, i) => {
+                    const valid = rule.test(form.password)
+                    return (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        {valid ? (
+                          <Check className="size-3 text-green-500 shrink-0" />
+                        ) : (
+                          <X className="size-3 text-muted-foreground shrink-0" />
+                        )}
+                        <span className={valid ? "text-green-600" : "text-muted-foreground"}>
+                          {rule.label}
+                        </span>
                       </div>
-                    )}
-                  </Field>
-                  <Field>
-                    <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
-                      {loading && <Loader2 data-icon="inline-start" />}
-                      Crear cuenta
-                    </Button>
-                    <FieldDescription className="text-center">
-                      ¿Ya tienes cuenta?{" "}
-                      <Link href="/login">Iniciar sesión</Link>
-                    </FieldDescription>
-                  </Field>
-                </FieldGroup>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Field>
+            <Field>
+              <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
+                {loading && <Loader2 data-icon="inline-start" />}
+                Crear cuenta
+              </Button>
+              <FieldDescription className="text-center">
+                ¿Ya tienes cuenta?{" "}
+                <Link href="/login">Iniciar sesión</Link>
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

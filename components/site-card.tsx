@@ -19,6 +19,7 @@ import Link from "next/link"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { addNotification } from "@/lib/notifications"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,9 +51,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
   async function handleDelete() {
     try {
       await api.delete(`/api/sites/${site.id}`)
-      const notifs = JSON.parse(localStorage.getItem("wpfacil_notifications") || "[]")
-      notifs.unshift({ id: Date.now(), text: `Sitio "${site.name}" eliminado`, time: new Date().toISOString() })
-      localStorage.setItem("wpfacil_notifications", JSON.stringify(notifs.slice(0, 20)))
+      addNotification(`Sitio "${site.name}" eliminado`)
       toast.success("Sitio eliminado")
       if (onDelete) onDelete(site.id)
       router.refresh()
@@ -66,24 +65,24 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
 
   return (
     <Card className="w-full overflow-hidden transition-all hover:shadow-md">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-24 w-32 shrink-0 items-center justify-center rounded-md bg-muted text-2xl font-bold text-muted-foreground">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-muted text-xl font-bold text-muted-foreground sm:h-14 sm:w-14">
               {site.name.charAt(0).toUpperCase()}
             </div>
-            <div className="space-y-0">
+            <div className="min-w-0 space-y-1">
               <a
                 href={`https://${domain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-base font-semibold text-primary hover:underline"
+                className="text-sm font-semibold text-primary hover:underline"
               >
                 {domain}
                 <ArrowUpRight className="ml-0.5 inline h-3 w-3" />
               </a>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-2xl">{site.name}</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-xl font-semibold sm:text-2xl">{site.name}</h3>
                 <span className="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium text-muted-foreground capitalize">
                   {site.plan}
                 </span>
@@ -91,22 +90,23 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
               <SiteStatusBadge status={site.status} />
             </div>
           </div>
-          <div className="flex items-center gap-1 pt-1">
+
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center sm:gap-1">
             {isDeploying ? (
-              <Button variant="outline" size="sm" disabled>
+              <Button variant="outline" size="sm" disabled className="w-full sm:w-auto">
                 <Settings className="mr-1 h-3.5 w-3.5" />
                 Gestionar
               </Button>
             ) : (
-              <Link href={`/dashboard/${site.id}`}>
-                <Button variant="outline" size="sm">
+              <Link href={`/dashboard/${site.id}`} className="contents">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <Settings className="mr-1 h-3.5 w-3.5" />
                   Gestionar
                 </Button>
               </Link>
             )}
             {isDeploying ? (
-              <Button variant="outline" size="sm" disabled>
+              <Button variant="outline" size="sm" disabled className="w-full sm:w-auto">
                 <ExternalLink className="mr-1 h-3.5 w-3.5" />
                 WP Admin
               </Button>
@@ -115,8 +115,9 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 href={`https://${domain}/wp-admin`}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="contents"
               >
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="w-full sm:w-auto">
                   <ExternalLink className="mr-1 h-3.5 w-3.5" />
                   WP Admin
                 </Button>
@@ -124,7 +125,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="col-span-2 w-full sm:col-span-1 sm:w-auto">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

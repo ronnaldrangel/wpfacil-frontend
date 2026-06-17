@@ -25,6 +25,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Edit, XCircle, Loader2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 
@@ -163,29 +166,31 @@ export default function AdminSubscriptionsPage() {
     {
       key: "user",
       label: "Usuario",
+      className: "hidden md:table-cell",
       render: (v: unknown) => (v as any)?.user?.name || "—",
     },
-    { key: "plan", label: "Plan", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
+    { key: "plan", label: "Plan", className: "hidden md:table-cell", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
     {
       key: "status",
       label: "Estado",
       render: (value: unknown) => (
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        <Badge
+          variant={
             value === "active"
-              ? "bg-green-100 text-green-800"
+              ? "default"
               : value === "canceled"
-              ? "bg-red-100 text-red-800"
-              : "bg-yellow-100 text-yellow-800"
-          }`}
+              ? "destructive"
+              : "secondary"
+          }
         >
           {value === "active" ? "Activa" : value === "canceled" ? "Cancelada" : String(value)}
-        </span>
+        </Badge>
       ),
     },
     {
       key: "currentPeriodEnd",
       label: "Próximo Pago",
+      className: "hidden lg:table-cell",
       render: (v: unknown) =>
         v
           ? new Date(v as string).toLocaleDateString("es-ES", {
@@ -229,19 +234,12 @@ export default function AdminSubscriptionsPage() {
   ]
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Subscripciones</h1>
-        <p className="text-sm text-muted-foreground">Gestiona las subscripciones de los sitios</p>
-      </div>
+      <PageHeader title="Subscripciones" description="Gestiona las subscripciones de los sitios" />
       <AdminDataTable columns={columns} data={subscriptions as unknown as Record<string, unknown>[]} searchKey="plan" />
     </div>
   )

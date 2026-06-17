@@ -59,22 +59,20 @@ function ResetForm() {
 
   if (done) {
     return (
-      <div className="flex flex-col gap-6">
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-2">
-              <CheckCircle className="size-12 text-green-500" />
-            </div>
-            <CardTitle>Contraseña restablecida</CardTitle>
-            <CardDescription>Tu contraseña ha sido actualizada exitosamente.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/login">
-              <Button className="w-full">Iniciar sesión</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader className="text-center">
+          <div className="flex justify-center mb-2">
+            <CheckCircle className="size-12 text-green-500" />
+          </div>
+          <CardTitle>Contraseña restablecida</CardTitle>
+          <CardDescription>Tu contraseña ha sido actualizada exitosamente.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/login">
+            <Button className="w-full">Iniciar sesión</Button>
+          </Link>
+        </CardContent>
+      </Card>
     )
   }
 
@@ -122,18 +120,8 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col gap-6">
-          <div className="flex justify-center">
-            <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-10 w-auto dark:hidden" />
-            <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-10 w-auto dark:block" />
-          </div>
-          <React.Suspense fallback={<div className="text-center py-8"><Loader2 className="size-8 animate-spin mx-auto" /></div>}>
-            <ResetForm />
-          </React.Suspense>
-        </div>
-      </div>
-    </div>
+    <React.Suspense fallback={<div className="text-center py-8"><Loader2 className="size-8 animate-spin mx-auto" /></div>}>
+      <ResetForm />
+    </React.Suspense>
   )
 }

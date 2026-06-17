@@ -4,6 +4,8 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { Loader2, CreditCard, ExternalLink } from "lucide-react"
 import { api, getToken, removeToken } from "@/lib/api-client"
 import { toast } from "sonner"
@@ -48,19 +50,12 @@ export default function BillingPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Facturación</h1>
-        <p className="text-sm text-muted-foreground">Gestiona tus suscripciones y facturas</p>
-      </div>
+      <PageHeader title="Facturación" description="Gestiona tus suscripciones y facturas" />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>

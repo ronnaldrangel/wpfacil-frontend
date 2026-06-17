@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CreateSiteSteps } from "@/components/create-site-steps"
 import { api } from "@/lib/api-client"
 import {
@@ -184,55 +186,66 @@ export default function CreateSitePage() {
 
           <div className="space-y-6">
             {step === 1 && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setCreationType("new")}
-                  className={cn(
-                    "relative flex flex-col items-start gap-4 rounded-xl border-2 p-6 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    creationType === "new"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  )}
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                    <Plus className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold">Crear sitio WordPress</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Empieza un sitio nuevo desde cero con WordPress.
-                    </p>
-                  </div>
-                  {creationType === "new" && (
-                    <div className="absolute right-4 top-4 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="h-4 w-4" />
-                    </div>
-                  )}
-                </button>
-
-                <div className="relative flex flex-col items-start gap-4 rounded-xl border-2 border-border bg-muted/30 p-6 opacity-60">
-                  <Badge
-                    variant="secondary"
-                    className="absolute right-4 top-4"
+              <RadioGroup
+                value={creationType}
+                onValueChange={(value) => setCreationType(value as "new" | "migrate")}
+                className="grid gap-4 md:grid-cols-2"
+              >
+                <div>
+                  <RadioGroupItem
+                    value="new"
+                    id="creation-new"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="creation-new"
+                    className="relative flex cursor-pointer flex-col items-start gap-4 rounded-xl border-2 border-border p-6 transition-all hover:shadow-md peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
                   >
-                    Próximamente
-                  </Badge>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                    <RefreshCw className="h-6 w-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold">Migrar sitio WordPress</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Trae tu sitio existente desde otro hosting.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Lock className="h-4 w-4" />
-                    <span>Disponible muy pronto</span>
-                  </div>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <Plus className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold">Crear sitio WordPress</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Empieza un sitio nuevo desde cero con WordPress.
+                      </p>
+                    </div>
+                  </Label>
                 </div>
-              </div>
+
+                <div>
+                  <RadioGroupItem
+                    value="migrate"
+                    id="creation-migrate"
+                    className="peer sr-only"
+                    disabled
+                  />
+                  <Label
+                    htmlFor="creation-migrate"
+                    className="relative flex cursor-not-allowed flex-col items-start gap-4 rounded-xl border-2 border-border bg-muted/30 p-6 opacity-60"
+                  >
+                    <Badge
+                      variant="secondary"
+                      className="absolute right-4 top-4"
+                    >
+                      Próximamente
+                    </Badge>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                      <RefreshCw className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold">Migrar sitio WordPress</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Trae tu sitio existente desde otro hosting.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Lock className="h-4 w-4" />
+                      <span>Disponible muy pronto</span>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
             )}
 
             {step === 2 && (
@@ -254,92 +267,37 @@ export default function CreateSitePage() {
             )}
 
             {step === 3 && (
-              <div className="space-y-4">
-                <button
-                  type="button"
-                  onClick={() => setDomainMode("free")}
-                  className={cn(
-                    "w-full rounded-xl border-2 p-5 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    domainMode === "free"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-                        domainMode === "free"
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-muted-foreground"
-                      )}
-                    >
-                      {domainMode === "free" && <Check className="h-3 w-3" />}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="font-semibold">Dominio gratuito de WPFacil</div>
-                      <div className="text-sm text-muted-foreground">
-                        Usa un subdominio gratuito para empezar.
+              <RadioGroup
+                value={domainMode}
+                onValueChange={(value) => setDomainMode(value as "free" | "other")}
+                className="space-y-4"
+              >
+                <div>
+                  <RadioGroupItem
+                    value="free"
+                    id="domain-free"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="domain-free"
+                    className="flex w-full cursor-pointer flex-col items-start gap-4 rounded-xl border-2 border-border p-5 transition-all hover:shadow-md peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-1">
+                        <div className="font-semibold">Dominio gratuito de WPFacil</div>
+                        <div className="text-sm text-muted-foreground">
+                          Usa un subdominio gratuito para empezar.
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  {domainMode === "free" && (
-                    <div className="mt-4 space-y-2">
-                      <Label htmlFor="domain-prefix" className="text-base font-medium">
-                        Subdominio
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="domain-prefix"
-                          value={freePrefix}
-                          onChange={(e) => handlePrefixChange(e.target.value)}
-                          className="h-12 flex-1 text-base focus-visible:ring-primary"
-                        />
-                        <span className="text-base text-muted-foreground whitespace-nowrap">
-                          -{randomSuffix}.{WILDCARD}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setDomainMode("other")}
-                  className={cn(
-                    "w-full rounded-xl border-2 p-5 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    domainMode === "other"
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={cn(
-                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-                        domainMode === "other"
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-muted-foreground"
-                      )}
-                    >
-                      {domainMode === "other" && <Check className="h-3 w-3" />}
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <div className="font-semibold">Dominio de otro proveedor</div>
-                      <div className="text-sm text-muted-foreground">
-                        Usa un dominio que ya hayas comprado.
-                      </div>
-                    </div>
-                  </div>
-                  {domainMode === "other" && (
-                    <div className="mt-4 space-y-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="domain-prefix-other" className="text-base font-medium">
-                          Subdominio temporal
+                    {domainMode === "free" && (
+                      <div className="w-full space-y-2">
+                        <Label htmlFor="domain-prefix" className="text-base font-medium">
+                          Subdominio
                         </Label>
                         <div className="flex items-center gap-2">
                           <Input
-                            id="domain-prefix-other"
+                            id="domain-prefix"
                             value={freePrefix}
                             onChange={(e) => handlePrefixChange(e.target.value)}
                             className="h-12 flex-1 text-base focus-visible:ring-primary"
@@ -349,16 +307,57 @@ export default function CreateSitePage() {
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>
-                          Podrás conectar tu dominio después de crear tu sitio web.
-                        </span>
+                    )}
+                  </Label>
+                </div>
+
+                <div>
+                  <RadioGroupItem
+                    value="other"
+                    id="domain-other"
+                    className="peer sr-only"
+                  />
+                  <Label
+                    htmlFor="domain-other"
+                    className="flex w-full cursor-pointer flex-col items-start gap-4 rounded-xl border-2 border-border p-5 transition-all hover:shadow-md peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 hover:border-primary/50"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-1">
+                        <div className="font-semibold">Dominio de otro proveedor</div>
+                        <div className="text-sm text-muted-foreground">
+                          Usa un dominio que ya hayas comprado.
+                        </div>
                       </div>
                     </div>
-                  )}
-                </button>
-              </div>
+                    {domainMode === "other" && (
+                      <div className="w-full space-y-3">
+                        <div className="space-y-2">
+                          <Label htmlFor="domain-prefix-other" className="text-base font-medium">
+                            Subdominio temporal
+                          </Label>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              id="domain-prefix-other"
+                              value={freePrefix}
+                              onChange={(e) => handlePrefixChange(e.target.value)}
+                              className="h-12 flex-1 text-base focus-visible:ring-primary"
+                            />
+                            <span className="text-base text-muted-foreground whitespace-nowrap">
+                              -{randomSuffix}.{WILDCARD}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+                          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                          <span>
+                            Podrás conectar tu dominio después de crear tu sitio web.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </Label>
+                </div>
+              </RadioGroup>
             )}
 
             {step === 4 && (

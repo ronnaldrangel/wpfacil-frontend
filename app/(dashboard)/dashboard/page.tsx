@@ -5,7 +5,10 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { SiteCard } from "@/components/site-card"
-import { Plus, Globe, Loader2 } from "lucide-react"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
+import { addNotification } from "@/lib/notifications"
+import { Plus, Globe } from "lucide-react"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 
@@ -21,17 +24,7 @@ interface Site {
 
 export default function DashboardPage() {
   return (
-    <React.Suspense fallback={
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Mis Sitios</h1>
-          <Button disabled><Plus className="mr-2 h-4 w-4" />Nuevo Sitio</Button>
-        </div>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="size-8 animate-spin text-primary" />
-        </div>
-      </div>
-    }>
+    <React.Suspense fallback={<PageLoader />}>
       <DashboardContent />
     </React.Suspense>
   )
@@ -84,9 +77,7 @@ function DashboardContent() {
       sessionStorage.removeItem("wpfacil_create_name")
       sessionStorage.removeItem("wpfacil_create_subdomain")
       sessionStorage.removeItem("wpfacil_create_plan")
-      const notifs = JSON.parse(localStorage.getItem("wpfacil_notifications") || "[]")
-      notifs.unshift({ id: Date.now(), text: `Sitio "${name}" creado exitosamente`, time: new Date().toISOString() })
-      localStorage.setItem("wpfacil_notifications", JSON.stringify(notifs.slice(0, 20)))
+      addNotification(`Sitio "${name}" creado exitosamente`)
       toast.success("Sitio creado. Desplegando...")
       router.replace("/dashboard")
       fetchSites()
@@ -106,18 +97,16 @@ function DashboardContent() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Mis Sitios</h1>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <PageHeader title="Mis Sitios" />
           <Link href="/create">
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Nuevo Sitio
             </Button>
           </Link>
         </div>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="size-8 animate-spin text-primary" />
-        </div>
+        <PageLoader />
       </div>
     )
   }
@@ -144,10 +133,10 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis Sitios</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <PageHeader title="Mis Sitios" />
         <Link href="/create">
-          <Button>
+          <Button className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Sitio
           </Button>

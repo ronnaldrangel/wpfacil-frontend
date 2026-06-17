@@ -2,10 +2,13 @@
 
 import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { PageHeader } from "@/components/page-header"
+import { PageLoader } from "@/components/page-loader"
 import { AdminMetricCard } from "@/components/admin-metric-card"
 import { AdminChart } from "@/components/admin-chart"
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table"
-import { Users, Globe, CreditCard, DollarSign, Loader2 } from "lucide-react"
+import { Users, Globe, CreditCard, DollarSign } from "lucide-react"
 import { api } from "@/lib/api-client"
 
 export default function AdminDashboardPage() {
@@ -41,11 +44,7 @@ export default function AdminDashboardPage() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!metrics) {
@@ -64,10 +63,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Panel de Administración</h1>
-        <p className="text-sm text-muted-foreground">Resumen general de la plataforma</p>
-      </div>
+      <PageHeader title="Panel de Administración" description="Resumen general de la plataforma" />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <AdminMetricCard
@@ -144,17 +140,17 @@ export default function AdminDashboardPage() {
                     <TableCell>{sub.site?.user?.name || "—"}</TableCell>
                     <TableCell className="capitalize">{sub.plan}</TableCell>
                     <TableCell>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      <Badge
+                        variant={
                           sub.status === "active"
-                            ? "bg-green-100 text-green-800"
+                            ? "default"
                             : sub.status === "canceled"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
+                            ? "destructive"
+                            : "secondary"
+                        }
                       >
                         {sub.status === "active" ? "Activa" : sub.status === "canceled" ? "Cancelada" : sub.status}
-                      </span>
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       {sub.currentPeriodEnd

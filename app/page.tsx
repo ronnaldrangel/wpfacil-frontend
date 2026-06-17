@@ -49,10 +49,10 @@ export default function HomePage() {
             <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-8 w-auto dark:hidden" />
             <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-8 w-auto dark:block" />
           </Link>
-          <nav className="hidden items-center gap-6 md:flex">
-            <button onClick={() => scrollTo("features")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Características</button>
-            <button onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Planes</button>
-            <button onClick={() => scrollTo("why")} className="text-sm text-muted-foreground hover:text-foreground transition-colors">Por qué WPFacil</button>
+          <nav className="hidden items-center gap-2 md:flex">
+            <Button variant="link" onClick={() => scrollTo("features")} className="text-sm text-muted-foreground hover:text-foreground">Características</Button>
+            <Button variant="link" onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground hover:text-foreground">Planes</Button>
+            <Button variant="link" onClick={() => scrollTo("why")} className="text-sm text-muted-foreground hover:text-foreground">Por qué WPFacil</Button>
           </nav>
           <div className="hidden items-center gap-1 md:flex">
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
@@ -67,10 +67,10 @@ export default function HomePage() {
         </div>
         {menuOpen && (
           <div className="border-t bg-background p-4 md:hidden">
-            <nav className="flex flex-col gap-3">
-              <button onClick={() => scrollTo("features")} className="text-sm text-muted-foreground hover:text-foreground">Características</button>
-              <button onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground hover:text-foreground">Planes</button>
-              <button onClick={() => scrollTo("why")} className="text-sm text-muted-foreground hover:text-foreground">Por qué WPFacil</button>
+            <nav className="flex flex-col gap-1">
+              <Button variant="ghost" onClick={() => scrollTo("features")} className="justify-start text-sm text-muted-foreground hover:text-foreground">Características</Button>
+              <Button variant="ghost" onClick={() => scrollTo("pricing")} className="justify-start text-sm text-muted-foreground hover:text-foreground">Planes</Button>
+              <Button variant="ghost" onClick={() => scrollTo("why")} className="justify-start text-sm text-muted-foreground hover:text-foreground">Por qué WPFacil</Button>
               <div className="flex flex-col gap-2 pt-2 border-t">
                 <Button variant="ghost" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                   {mounted && theme === "dark" ? <Sun className="size-4 mr-2" /> : <Moon className="size-4 mr-2" />}
