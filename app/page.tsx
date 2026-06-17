@@ -118,7 +118,7 @@ export default function HomePage() {
               </div>
             </div>
             <img
-              src="/hero/Fondo.png"
+              src="/hero/Fondo1.png"
               alt="WPFacil Dashboard"
               className="mt-16 w-full"
             />

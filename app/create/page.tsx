@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Lock,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -332,11 +333,27 @@ export default function CreateSitePage() {
                   </div>
                   {domainMode === "other" && (
                     <div className="mt-4 space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        Podrás conectar tu dominio después de crear tu sitio web.
-                      </p>
-                      <div className="rounded-lg bg-muted px-4 py-3 text-sm font-medium text-foreground">
-                        {form.subdomain}.{WILDCARD}
+                      <div className="space-y-2">
+                        <Label htmlFor="domain-prefix-other" className="text-base font-medium">
+                          Subdominio temporal
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="domain-prefix-other"
+                            value={freePrefix}
+                            onChange={(e) => handlePrefixChange(e.target.value)}
+                            className="h-12 flex-1 text-base focus-visible:ring-primary"
+                          />
+                          <span className="text-base text-muted-foreground whitespace-nowrap">
+                            -{randomSuffix}.{WILDCARD}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-200">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>
+                          Podrás conectar tu dominio después de crear tu sitio web.
+                        </span>
                       </div>
                     </div>
                   )}
