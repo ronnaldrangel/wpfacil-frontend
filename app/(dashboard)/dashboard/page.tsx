@@ -234,14 +234,7 @@ function DashboardContent() {
           <p className="mt-2 text-sm text-muted-foreground">
             Crea tu primer sitio WordPress en segundos
           </p>
-          {availableSlots.length === 0 && (
-            <Link href="/create" className="mt-6">
-              <Button size="lg">
-                <Plus className="mr-2 h-5 w-5" />
-                Crea tu primer sitio
-              </Button>
-            </Link>
-          )}
+
         </div>
       </div>
     )
