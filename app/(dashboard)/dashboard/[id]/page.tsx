@@ -512,65 +512,69 @@ export default function SiteDetailPage() {
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : domains.length === 0 ? (
+              ) : domains.filter((d: any) => d.serviceName === "wordpress").length === 0 ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
-                  No hay dominios configurados en Dokploy.
+                  No hay dominios de WordPress configurados en Dokploy.
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {domains.map((d: any) => (
-                    <Card key={d.domainId || d.id || d.host}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 space-y-1">
-                            <p className="truncate font-semibold">{d.host}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Servicio: {d.serviceName || "—"}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Certificado: {d.certificateType || "—"}
-                            </p>
-                            <Badge variant={d.https ? "default" : "secondary"}>
-                              {d.https ? "HTTPS" : "HTTP"}
-                            </Badge>
-                          </div>
-                          <div className="flex shrink-0 gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDnsGuideDomain(d.host)}
-                            >
-                              <Info className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-red-500">
-                                  <Trash2 className="h-4 w-4" />
+                  {domains
+                    .filter((d: any) => d.serviceName === "wordpress")
+                    .map((d: any) => {
+                      const isOriginalDomain = d.host === `${site.subdomain}.${WILDCARD}`
+                      return (
+                        <Card key={d.domainId || d.id || d.host}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 space-y-1">
+                                <p className="truncate font-semibold">{d.host}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Certificado: {d.certificateType || "—"}
+                                </p>
+                                <Badge variant={d.https ? "default" : "secondary"}>
+                                  {d.https ? "HTTPS" : "HTTP"}
+                                </Badge>
+                              </div>
+                              <div className="flex shrink-0 gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setDnsGuideDomain(d.host)}
+                                >
+                                  <Info className="h-4 w-4" />
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Eliminar dominio</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    ¿Estás seguro de eliminar el dominio {d.host}? Esta acción no se puede deshacer.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => handleDeleteDomain(d.domainId || d.id)}
-                                  >
-                                    Eliminar
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                                {!isOriginalDomain && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="text-red-500">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Eliminar dominio</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          ¿Estás seguro de eliminar el dominio {d.host}? Esta acción no se puede deshacer.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          onClick={() => handleDeleteDomain(d.domainId || d.id)}
+                                        >
+                                          Eliminar
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                 </div>
               )}
             </CardContent>
@@ -579,35 +583,35 @@ export default function SiteDetailPage() {
           <Dialog open={!!dnsGuideDomain} onOpenChange={(open) => !open && setDnsGuideDomain(null)}>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>DNS Configuration Guide</DialogTitle>
+                <DialogTitle>Guía de configuración DNS</DialogTitle>
                 <DialogDescription>
-                  Follow these steps to configure your DNS records for {dnsGuideDomain}
+                  Sigue estos pasos para configurar los registros DNS de {dnsGuideDomain}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 text-sm">
                 <p className="text-muted-foreground">
-                  To make your domain accessible, you need to configure your DNS records with your domain provider (e.g., Cloudflare, GoDaddy, NameCheap).
+                  Para que tu dominio sea accesible, debes configurar los registros DNS con tu proveedor de dominio (por ejemplo, Cloudflare, GoDaddy, NameCheap).
                 </p>
                 <div>
-                  <p className="font-semibold">1. Add A Record</p>
+                  <p className="font-semibold">1. Añade un registro A</p>
                   <p className="text-muted-foreground">
-                    Create an A record that points your domain to the server&apos;s IP address:
+                    Crea un registro A que apunte tu dominio a la dirección IP del servidor:
                   </p>
                   <div className="mt-2 rounded-md bg-muted p-3 font-mono text-xs">
-                    Type: A<br />
-                    Name: @ or {dnsGuideDomain ? dnsGuideDomain.split(".")[0] : "@"}<br />
-                    Value: {SERVER_IP}
+                    Tipo: A<br />
+                    Nombre: @ o {dnsGuideDomain ? dnsGuideDomain.split(".")[0] : "@"}<br />
+                    Valor: {SERVER_IP}
                   </div>
                 </div>
                 <div>
-                  <p className="font-semibold">2. Verify Configuration</p>
+                  <p className="font-semibold">2. Verifica la configuración</p>
                   <p className="text-muted-foreground">
-                    After configuring your DNS records:
+                    Después de configurar los registros DNS:
                   </p>
                   <ul className="mt-1 list-disc space-y-1 pl-5 text-muted-foreground">
-                    <li>Wait for DNS propagation (usually 15-30 minutes)</li>
+                    <li>Espera la propagación DNS (normalmente 15-30 minutos)</li>
                     <li>
-                      Test your domain by visiting:{" "}
+                      Prueba tu dominio visitando:{" "}
                       <a
                         href={`https://${dnsGuideDomain}`}
                         target="_blank"
@@ -617,7 +621,7 @@ export default function SiteDetailPage() {
                         https://{dnsGuideDomain}/
                       </a>
                     </li>
-                    <li>Use a DNS lookup tool to verify your records</li>
+                    <li>Usa una herramienta de consulta DNS para verificar tus registros</li>
                   </ul>
                 </div>
               </div>
@@ -651,20 +655,20 @@ export default function SiteDetailPage() {
               <CardTitle>Base de Datos</CardTitle>
               <CardDescription>Usa estas credenciales en phpMyAdmin</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
+            <CardContent className="divide-y">
+              <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Servidor</Label>
                 <p className="font-mono text-sm">{PMA_URL.replace(/^https?:\/\//, "")}</p>
               </div>
-              <div className="space-y-1">
+              <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Base de datos</Label>
                 <p className="font-mono text-sm">{site.dbName}</p>
               </div>
-              <div className="space-y-1">
+              <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Usuario</Label>
                 <p className="font-mono text-sm">{site.dbUser}</p>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2 py-3">
                 <Label className="text-xs text-muted-foreground">Contraseña</Label>
                 <PasswordInput value={site.dbPassword} readOnly showToggle className="font-mono text-sm" />
               </div>
@@ -676,16 +680,16 @@ export default function SiteDetailPage() {
               <CardTitle>FileBrowser</CardTitle>
               <CardDescription>Acceso a los archivos del sitio</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1">
+            <CardContent className="divide-y">
+              <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">URL</Label>
                 <p className="font-mono text-sm">https://{site.subdomain}.{FILES_DOMAIN}</p>
               </div>
-              <div className="space-y-1">
+              <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Usuario</Label>
                 <p className="font-mono text-sm">admin</p>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2 py-3">
                 <Label className="text-xs text-muted-foreground">Contraseña</Label>
                 <PasswordInput value={site.fbPassword || "—"} readOnly showToggle className="font-mono text-sm" />
               </div>

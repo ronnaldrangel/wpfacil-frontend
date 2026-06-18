@@ -35,6 +35,8 @@ function DashboardContent() {
   const searchParams = useSearchParams()
   const [sites, setSites] = React.useState<Site[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [processingPayment, setProcessingPayment] = React.useState(false)
+  const processedRef = React.useRef(false)
 
   function handleDeleteSite(id: string) {
     setSites((prev) => prev.filter((s) => s.id !== id))
@@ -58,32 +60,44 @@ function DashboardContent() {
   React.useEffect(() => {
     const sessionId = searchParams.get("session_id")
     if (!sessionId) return
+    if (processedRef.current) return
+
     const name = sessionStorage.getItem("wpfacil_create_name")
     const subdomain = sessionStorage.getItem("wpfacil_create_subdomain")
     const plan = sessionStorage.getItem("wpfacil_create_plan")
     if (!name || !subdomain || !plan) return
 
-    api.get<{ paid: boolean }>(`/api/stripe/session/${sessionId}`).then(async (session) => {
-      if (!session.paid) {
-        toast.error("El pago no fue completado")
-        return
-      }
-      const site = await api.post<{ id: string }>("/api/sites", { name, subdomain, plan })
+    processedRef.current = true
+    setProcessingPayment(true)
+
+    ;(async () => {
       try {
-        await api.post("/api/stripe/attach-subscription", { sessionId, siteId: site.id })
+        const session = await api.get<{ paid: boolean }>(`/api/stripe/session/${sessionId}`)
+        if (!session.paid) {
+          toast.error("El pago no fue completado")
+          return
+        }
+        const site = await api.post<{ id: string }>("/api/sites", { name, subdomain, plan })
+        try {
+          await api.post("/api/stripe/attach-subscription", { sessionId, siteId: site.id })
+        } catch (err: any) {
+          console.error("attach-subscription error", err)
+          toast.error(err?.message || "Error al vincular la suscripción")
+        }
+        sessionStorage.removeItem("wpfacil_create_name")
+        sessionStorage.removeItem("wpfacil_create_subdomain")
+        sessionStorage.removeItem("wpfacil_create_plan")
+        addNotification(`Sitio "${name}" creado exitosamente`)
+        toast.success("Sitio creado. Desplegando...")
+        router.replace("/dashboard")
+        fetchSites()
       } catch (err: any) {
-        toast.error(err?.message || "Error al vincular la suscripción")
+        console.error("post-payment error", err)
+        toast.error(err?.message || "Error al verificar el pago")
+      } finally {
+        setProcessingPayment(false)
       }
-      sessionStorage.removeItem("wpfacil_create_name")
-      sessionStorage.removeItem("wpfacil_create_subdomain")
-      sessionStorage.removeItem("wpfacil_create_plan")
-      addNotification(`Sitio "${name}" creado exitosamente`)
-      toast.success("Sitio creado. Desplegando...")
-      router.replace("/dashboard")
-      fetchSites()
-    }).catch(() => {
-      toast.error("Error al verificar el pago")
-    })
+    })()
   }, [searchParams])
 
   const hasDeploying = sites.some((s) => s.status === "deploying" || s.status === "provisioning")
@@ -93,6 +107,16 @@ function DashboardContent() {
     const interval = setInterval(fetchSites, 5000)
     return () => clearInterval(interval)
   }, [hasDeploying])
+
+  if (processingPayment) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Procesando pago" />
+        <PageLoader />
+        <p className="text-center text-sm text-muted-foreground">Creando tu sitio, por favor espera...</p>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
