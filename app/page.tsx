@@ -4,10 +4,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Globe, Zap, Shield, Headphones, Server, Cloud, Check, Menu, X, Sun, Moon, Star } from "lucide-react"
+import { Globe, Zap, Shield, Headphones, Server, Cloud, Check, Menu, X, Sun, Moon, Star, Loader2 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useRouter } from "next/navigation"
-import { getToken } from "@/lib/api-client"
+import { getToken, api } from "@/lib/api-client"
 import * as React from "react"
 
 const features = [
@@ -17,12 +17,6 @@ const features = [
   { icon: Server, title: "Backups automáticos", desc: "Copias de seguridad diarias con restauración en 1 clic" },
   { icon: Cloud, title: "CDN incorporado", desc: "Distribución global de contenido para carga instantánea" },
   { icon: Headphones, title: "Soporte experto", desc: "Equipo especializado en WordPress disponible 24/7" },
-]
-
-const plans = [
-  { name: "Básico", slug: "basic", price: "$9.99", storage: "10 GB", popular: false },
-  { name: "Pro", slug: "pro", price: "$13.99", storage: "50 GB", popular: true },
-  { name: "Enterprise", slug: "enterprise", price: "$20.99", storage: "200 GB", popular: false },
 ]
 
 const testimonials = [
@@ -36,6 +30,8 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [checking, setChecking] = React.useState(true)
+  const [plans, setPlans] = React.useState<any[]>([])
+  const [loadingPlans, setLoadingPlans] = React.useState(true)
   const { theme, setTheme } = useTheme()
 
   React.useEffect(() => setMounted(true), [])
@@ -47,6 +43,14 @@ export default function HomePage() {
       setChecking(false)
     }
   }, [router])
+
+  React.useEffect(() => {
+    api
+      .get<any[]>("/api/plans")
+      .then((data) => setPlans(Array.isArray(data) ? data : []))
+      .catch(() => setPlans([]))
+      .finally(() => setLoadingPlans(false))
+  }, [])
 
   if (checking) return null
 
@@ -219,45 +223,59 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold md:text-4xl">Planes simples y transparentes</h2>
               <p className="mt-4 text-muted-foreground">Sin sorpresas. Escoge el plan ideal para tu proyecto</p>
             </div>
-            <div className="mt-12 grid gap-6 md:grid-cols-3">
-              {plans.map((plan) => (
-                <Card key={plan.slug} className={plan.popular ? "relative border-primary shadow-lg overflow-visible" : ""}>
-                  {plan.popular && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Popular</Badge>
-                  )}
-                  <CardHeader className="text-center pb-0">
-                    <CardTitle className="text-xl">{plan.name}</CardTitle>
-                    <p className="mt-4">
-                      <span className="text-4xl font-bold">{plan.price}</span>
-                      <span className="text-sm text-muted-foreground">/mes</span>
-                    </p>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <ul className="space-y-3">
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-green-500 shrink-0" />
-                        {plan.storage} almacenamiento
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-green-500 shrink-0" />
-                        SSL automático
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-green-500 shrink-0" />
-                        CDN global
-                      </li>
-                      <li className="flex items-center gap-2 text-sm">
-                        <Check className="size-4 text-green-500 shrink-0" />
-                        Soporte 24/7
-                      </li>
-                    </ul>
-                    <Button className="mt-6 w-full h-12 px-8 text-base" size="lg" variant={plan.popular ? "default" : "outline"} asChild>
-                      <Link href="/register">Comenzar ahora</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {loadingPlans ? (
+              <div className="mt-12 flex justify-center">
+                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : plans.length === 0 ? (
+              <p className="mt-12 text-center text-muted-foreground">No hay planes disponibles en este momento.</p>
+            ) : (
+              <div className="mt-12 grid gap-6 md:grid-cols-3">
+                {plans.map((plan) => {
+                  const isPopular = plan.slug === "pro"
+                  const storageLabel = plan.maxStorage >= 1024
+                    ? `${(plan.maxStorage / 1024).toFixed(0)} GB`
+                    : `${plan.maxStorage} MB`
+                  return (
+                    <Card key={plan.slug} className={isPopular ? "relative border-primary shadow-lg overflow-visible" : ""}>
+                      {isPopular && (
+                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Popular</Badge>
+                      )}
+                      <CardHeader className="text-center pb-0">
+                        <CardTitle className="text-xl">{plan.name}</CardTitle>
+                        <p className="mt-4">
+                          <span className="text-4xl font-bold">${Number(plan.price).toFixed(2)}</span>
+                          <span className="text-sm text-muted-foreground">/mes</span>
+                        </p>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <ul className="space-y-3">
+                          <li className="flex items-center gap-2 text-sm">
+                            <Check className="size-4 text-green-500 shrink-0" />
+                            {storageLabel} almacenamiento
+                          </li>
+                          <li className="flex items-center gap-2 text-sm">
+                            <Check className="size-4 text-green-500 shrink-0" />
+                            SSL automático
+                          </li>
+                          <li className="flex items-center gap-2 text-sm">
+                            <Check className="size-4 text-green-500 shrink-0" />
+                            CDN global
+                          </li>
+                          <li className="flex items-center gap-2 text-sm">
+                            <Check className="size-4 text-green-500 shrink-0" />
+                            Soporte 24/7
+                          </li>
+                        </ul>
+                        <Button className="mt-6 w-full h-12 px-8 text-base" size="lg" variant={isPopular ? "default" : "outline"} asChild>
+                          <Link href="/register">Comenzar ahora</Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </section>
 

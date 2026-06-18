@@ -14,7 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { SiteStatusBadge } from "@/components/site-status-badge"
-import { ExternalLink, Settings, Trash2, MoreVertical, ArrowUpRight } from "lucide-react"
+import { ExternalLink, Settings, Trash2, MoreVertical, ArrowUpRight, AlertTriangle, Clock } from "lucide-react"
 import Link from "next/link"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
@@ -36,8 +36,13 @@ interface Site {
   subdomain: string
   domain?: string
   plan: string
-  status: "provisioning" | "deploying" | "active" | "stopped" | "error"
+  status: "provisioning" | "deploying" | "active" | "stopped" | "error" | "suspended"
   createdAt: string
+  subscription?: {
+    status: string
+    daysUntilPayment: number | null
+    daysUntilDeletion: number | null
+  } | null
 }
 
 interface SiteCardProps {
@@ -57,6 +62,15 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       router.refresh()
     } catch {
       toast.error("Error al eliminar el sitio")
+    }
+  }
+
+  async function openWpAdmin() {
+    try {
+      const res = await api.post<{ url: string }>(`/api/sites/${site.id}/wp-admin`)
+      window.open(res.url, "_blank")
+    } catch {
+      window.open(`https://${domain}/wp-admin`, "_blank")
     }
   }
 
@@ -152,21 +166,26 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <a
-                      href={`https://${domain}/wp-admin`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="contents"
-                    >
-                      <Button variant="outline" size="icon">
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </a>
+                    <Button variant="outline" size="icon" onClick={openWpAdmin}>
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
                   )}
                   <ActionsMenu variant="mobile" />
                 </div>
               </div>
               <SiteStatusBadge status={site.status} />
+              {site.subscription?.status === "grace" && site.subscription.daysUntilDeletion != null && (
+                <div className="flex items-center gap-1.5 text-xs font-medium text-red-600">
+                  <AlertTriangle className="size-3.5" />
+                  Pago vencido. Se eliminará en {site.subscription.daysUntilDeletion} días.
+                </div>
+              )}
+              {site.subscription?.status === "active" && site.subscription.daysUntilPayment != null && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Clock className="size-3.5" />
+                  Próximo pago en {site.subscription.daysUntilPayment} días
+                </div>
+              )}
             </div>
           </div>
 
@@ -190,17 +209,10 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 WP Admin
               </Button>
             ) : (
-              <a
-                href={`https://${domain}/wp-admin`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="contents"
-              >
-                <Button variant="outline" size="sm">
-                  <ExternalLink className="mr-1 h-3.5 w-3.5" />
-                  WP Admin
-                </Button>
-              </a>
+              <Button variant="outline" size="sm" onClick={openWpAdmin}>
+                <ExternalLink className="mr-1 h-3.5 w-3.5" />
+                WP Admin
+              </Button>
             )}
             <ActionsMenu variant="desktop" />
           </div>

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/page-header"
 import { PageLoader } from "@/components/page-loader"
-import { Loader2, ExternalLink, Globe } from "lucide-react"
+import { Loader2, ExternalLink, Globe, Package } from "lucide-react"
 import { api, getToken, removeToken } from "@/lib/api-client"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -19,7 +19,7 @@ interface Subscription {
   plan: string
   status: string
   currentPeriodEnd: string | null
-  site: {
+  site?: {
     id: string
     name: string
     subdomain: string
@@ -81,7 +81,7 @@ export default function BillingPage() {
   }
 
   function getDomain(sub: Subscription) {
-    return sub.site.customDomain || `${sub.site.subdomain}.${WILDCARD}`
+    return sub.site?.customDomain || `${sub.site?.subdomain}.${WILDCARD}`
   }
 
   if (loading) {
@@ -95,13 +95,13 @@ export default function BillingPage() {
       <Card>
         <CardHeader>
           <CardTitle>Suscripciones</CardTitle>
-          <CardDescription>Cada sitio tiene su propia suscripción</CardDescription>
+          <CardDescription>Gestiona tus suscripciones y slots disponibles</CardDescription>
         </CardHeader>
         <CardContent>
           {subscriptions.length === 0 ? (
             <div className="py-8 text-center space-y-4">
               <p className="text-sm text-muted-foreground">
-                No tienes suscripciones activas. Crea un sitio para comenzar.
+                No tienes suscripciones activas. Crea o configura un sitio para comenzar.
               </p>
               <Button variant="outline" onClick={() => router.push("/create")}>
                 Crear un sitio
@@ -115,16 +115,28 @@ export default function BillingPage() {
                   className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-4 w-4 text-muted-foreground" />
-                      <Link
-                        href={`/dashboard/${sub.site.id}`}
-                        className="font-semibold hover:underline"
-                      >
-                        {sub.site.name}
-                      </Link>
-                    </div>
-                    <p className="text-sm text-muted-foreground">{getDomain(sub)}</p>
+                    {sub.site ? (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-muted-foreground" />
+                          <Link
+                            href={`/dashboard/${sub.site.id}`}
+                            className="font-semibold hover:underline"
+                          >
+                            {sub.site.name}
+                          </Link>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{getDomain(sub)}</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-semibold">Slot libre</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">Sin sitio asignado</p>
+                      </>
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 sm:gap-6">
                     <div className="text-sm">
@@ -138,6 +150,11 @@ export default function BillingPage() {
                     <Badge variant={sub.status === "active" ? "default" : "secondary"}>
                       {sub.status}
                     </Badge>
+                    {!sub.site && (
+                      <Button size="sm" asChild>
+                        <Link href={`/create?slotId=${sub.id}&plan=${sub.plan}`}>Configurar</Link>
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}

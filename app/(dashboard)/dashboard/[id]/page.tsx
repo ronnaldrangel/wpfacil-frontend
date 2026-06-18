@@ -105,6 +105,8 @@ export default function SiteDetailPage() {
   const [addDomainOpen, setAddDomainOpen] = React.useState(false)
   const [newDomain, setNewDomain] = React.useState("")
   const [dnsGuideDomain, setDnsGuideDomain] = React.useState<string | null>(null)
+  const [wpInfo, setWpInfo] = React.useState<any>(null)
+  const [loadingWpInfo, setLoadingWpInfo] = React.useState(false)
 
   async function fetchAll() {
     try {
@@ -122,7 +124,19 @@ export default function SiteDetailPage() {
     }
   }
 
-  React.useEffect(() => { fetchAll(); fetchDomains() }, [id])
+  React.useEffect(() => { fetchAll(); fetchDomains(); fetchWordPressInfo() }, [id])
+
+  async function fetchWordPressInfo() {
+    setLoadingWpInfo(true)
+    try {
+      const res = await api.get<any>(`/api/sites/${id}/wp-info`)
+      setWpInfo(res)
+    } catch {
+      setWpInfo(null)
+    } finally {
+      setLoadingWpInfo(false)
+    }
+  }
 
   async function fetchDomains() {
     setLoadingDomains(true)
@@ -192,6 +206,16 @@ export default function SiteDetailPage() {
     }
   }
 
+  async function openWpAdmin() {
+    if (!site) return
+    try {
+      const res = await api.post<{ url: string }>(`/api/sites/${site.id}/wp-admin`)
+      window.open(res.url, "_blank")
+    } catch {
+      window.open(`https://${domain}/wp-admin`, "_blank")
+    }
+  }
+
   if (loading) {
     return <PageLoader />
   }
@@ -213,6 +237,20 @@ export default function SiteDetailPage() {
       month: "short",
       year: "numeric",
     })
+  }
+
+  function formatRelativeTime(dateString?: string) {
+    if (!dateString) return "—"
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    if (diffHours < 1) return "hace menos de 1 hora"
+    if (diffHours === 1) return "hace 1 hora"
+    if (diffHours < 24) return `hace ${diffHours} horas`
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays === 1) return "hace 1 día"
+    return `hace ${diffDays} días`
   }
 
   function InfoRow({
@@ -301,16 +339,10 @@ export default function SiteDetailPage() {
                   Stop
                 </Button>
               )}
-              <a
-                href={`https://${domain}/wp-admin`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  WP Admin
-                </Button>
-              </a>
+              <Button variant="outline" onClick={openWpAdmin}>
+                <ExternalLink className="mr-2 h-4 w-4" />
+                WP Admin
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
@@ -362,6 +394,7 @@ export default function SiteDetailPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="h-auto w-full flex-wrap justify-start">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="wordpress">WordPress</TabsTrigger>
           <TabsTrigger value="dominio">Dominio</TabsTrigger>
           <TabsTrigger value="files">File & Database</TabsTrigger>
         </TabsList>
@@ -372,8 +405,12 @@ export default function SiteDetailPage() {
               <CardContent className="pt-6">
                 <div className="space-y-2">
                   <p className="text-sm font-medium">WordPress version</p>
-                  <p className="text-4xl font-bold">—</p>
-                  <p className="text-sm text-muted-foreground">Updated</p>
+                  <p className="text-4xl font-bold">
+                    {loadingWpInfo ? "—" : wpInfo?.wordpressVersion || "No disponible"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {wpInfo?.wordpressVersion ? "Instalado" : loadingWpInfo ? "Verificando..." : "Sin instalar"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -430,6 +467,57 @@ export default function SiteDetailPage() {
                 action={() => router.push("/billing")}
                 actionLabel="Manage"
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="wordpress" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado de WordPress</CardTitle>
+              <CardDescription>Información de actualizaciones y versión</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {loadingWpInfo ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : !wpInfo ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No se pudo obtener la información de WordPress.
+                </div>
+              ) : (
+                <>
+                  <InfoRow
+                    label="Automatic updates"
+                    value={wpInfo.automaticUpdates ? "Activated" : "Deactivated"}
+                  />
+                  <InfoRow
+                    label="Last update"
+                    value={formatRelativeTime(wpInfo.lastUpdate)}
+                  />
+                  <InfoRow
+                    label="WordPress version"
+                    value={wpInfo.wordpressVersion || "—"}
+                  />
+                  <InfoRow
+                    label="Plugins"
+                    value={
+                      wpInfo.plugins?.updates
+                        ? `${wpInfo.plugins.updates} updates available`
+                        : "No updates"
+                    }
+                  />
+                  <InfoRow
+                    label="Theme"
+                    value={
+                      wpInfo.themes?.updates
+                        ? `${wpInfo.themes.updates} updates available`
+                        : "No updates"
+                    }
+                  />
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

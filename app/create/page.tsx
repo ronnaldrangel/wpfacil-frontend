@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CreateSiteSteps } from "@/components/create-site-steps"
+import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
 import {
   ArrowLeft,
@@ -26,13 +27,24 @@ import { toast } from "sonner"
 const WILDCARD = process.env.NEXT_PUBLIC_WILDCARD_DOMAIN || "wp.wpfacil.net"
 
 export default function CreateSitePage() {
+  return (
+    <React.Suspense fallback={<PageLoader />}>
+      <CreateSiteContent />
+    </React.Suspense>
+  )
+}
+
+function CreateSiteContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const slotId = searchParams.get("slotId")
+  const slotPlan = searchParams.get("plan")
   const [step, setStep] = React.useState(1)
   const [creationType, setCreationType] = React.useState<"new" | "migrate">("new")
   const [loading, setLoading] = React.useState(false)
   const [plans, setPlans] = React.useState<any[]>([])
   const [loadingPlans, setLoadingPlans] = React.useState(true)
-  const [selectedPlan, setSelectedPlan] = React.useState("")
+  const [selectedPlan, setSelectedPlan] = React.useState(slotPlan || "")
   const [form, setForm] = React.useState({
     name: "",
     subdomain: "",
@@ -47,7 +59,7 @@ export default function CreateSitePage() {
       .get<any[]>("/api/plans")
       .then((data) => {
         setPlans(data)
-        if (data.length > 0) setSelectedPlan(data[0].slug)
+        if (data.length > 0 && !slotPlan) setSelectedPlan(data[0].slug)
       })
       .catch(() => {})
       .finally(() => setLoadingPlans(false))
@@ -95,8 +107,10 @@ export default function CreateSitePage() {
     return !!selectedPlan
   }
 
+  const totalSteps = slotId ? 3 : 4
+
   function handleNext() {
-    if (step < 4) {
+    if (step < totalSteps) {
       setStep(step + 1)
     } else {
       handleCreate()
@@ -113,12 +127,23 @@ export default function CreateSitePage() {
       toast.error("Plan no encontrado")
       return
     }
-    if (!plan.priceId) {
+    if (!slotId && !plan.priceId) {
       toast.error("Este plan no tiene un precio configurado en Stripe")
       return
     }
     setLoading(true)
     try {
+      if (slotId) {
+        await api.post("/api/sites", {
+          name: form.name,
+          subdomain: form.subdomain,
+          plan: selectedPlan,
+          slotId,
+        })
+        toast.success("Sitio creado. Desplegando...")
+        router.push("/dashboard")
+        return
+      }
       sessionStorage.setItem("wpfacil_create_name", form.name)
       sessionStorage.setItem("wpfacil_create_subdomain", form.subdomain)
       sessionStorage.setItem("wpfacil_create_plan", selectedPlan)
@@ -127,7 +152,7 @@ export default function CreateSitePage() {
       })
       window.location.href = res.url
     } catch (err: any) {
-      toast.error(err?.message || "Error al iniciar el pago")
+      toast.error(err?.message || "Error al crear el sitio")
       setLoading(false)
     }
   }
@@ -150,7 +175,7 @@ export default function CreateSitePage() {
           </div>
 
           <div className="mx-auto w-full max-w-xs sm:max-w-md">
-            <CreateSiteSteps currentStep={step} totalSteps={4} />
+            <CreateSiteSteps currentStep={step} totalSteps={totalSteps} />
           </div>
 
           <Button
@@ -368,16 +393,17 @@ export default function CreateSitePage() {
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {plans.map((plan) => (
+                    {(slotPlan ? plans.filter((p) => p.slug === slotPlan) : plans).map((plan) => (
                       <button
                         type="button"
                         key={plan.slug}
-                        onClick={() => setSelectedPlan(plan.slug)}
+                        onClick={() => !slotId && setSelectedPlan(plan.slug)}
                         className={cn(
                           "relative rounded-xl border-2 p-5 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                           selectedPlan === plan.slug
                             ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            : "border-border hover:border-primary/50",
+                          slotId && "cursor-default"
                         )}
                       >
                         <div className="space-y-4">
@@ -425,10 +451,10 @@ export default function CreateSitePage() {
             disabled={loading || !canContinue()}
             className="h-14 w-full px-8 text-lg sm:w-auto sm:px-20"
           >
-            {step === 4 && loading && (
+            {step === totalSteps && loading && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {step < 4 ? "Continuar" : "Crear Sitio"}
+            {step < totalSteps ? "Continuar" : "Crear Sitio"}
           </Button>
           <div className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">
             <Sparkles className="h-4 w-4" />

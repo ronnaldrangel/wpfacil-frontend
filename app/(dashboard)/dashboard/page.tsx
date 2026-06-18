@@ -4,11 +4,13 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { SiteCard } from "@/components/site-card"
 import { PageHeader } from "@/components/page-header"
 import { PageLoader } from "@/components/page-loader"
 import { addNotification } from "@/lib/notifications"
-import { Plus, Globe } from "lucide-react"
+import { Plus, Globe, ChevronDown, Package } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 
@@ -20,6 +22,55 @@ interface Site {
   plan: string
   status: "provisioning" | "deploying" | "active" | "stopped" | "error"
   createdAt: string
+}
+
+function AvailableSlotsAccordion({ slots }: { slots: any[] }) {
+  const [open, setOpen] = React.useState(true)
+  const count = slots.length
+  return (
+    <Card className="border-primary bg-primary/5">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex w-full items-center justify-between gap-4 p-4 text-left"
+      >
+        <p className="text-sm font-medium">
+          Tienes {count} sitio web disponible{count > 1 ? "s" : ""} para configurar.
+        </p>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <CardContent className="space-y-3 border-t pt-4">
+          {slots.map((slot) => {
+            const storageLabel = slot.maxStorage >= 1024
+              ? `${(slot.maxStorage / 1024).toFixed(0)} GB`
+              : `${slot.maxStorage} MB`
+            return (
+              <div
+                key={slot.id}
+                className="flex flex-col gap-3 rounded-lg border bg-background p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
+                    <Package className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">{slot.planName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      ${Number(slot.planPrice).toFixed(2)}/mes · {storageLabel}
+                    </p>
+                  </div>
+                </div>
+                <Button asChild>
+                  <Link href={`/create?slotId=${slot.id}&plan=${slot.plan}`}>Configurar</Link>
+                </Button>
+              </div>
+            )
+          })}
+        </CardContent>
+      )}
+    </Card>
+  )
 }
 
 export default function DashboardPage() {
@@ -36,6 +87,7 @@ function DashboardContent() {
   const [sites, setSites] = React.useState<Site[]>([])
   const [loading, setLoading] = React.useState(true)
   const [processingPayment, setProcessingPayment] = React.useState(false)
+  const [availableSlots, setAvailableSlots] = React.useState<any[]>([])
   const processedRef = React.useRef(false)
 
   function handleDeleteSite(id: string) {
@@ -53,8 +105,18 @@ function DashboardContent() {
     }
   }
 
+  async function fetchAvailableSlots() {
+    try {
+      const data = await api.get<any[]>("/api/subscriptions/available-slots")
+      setAvailableSlots(Array.isArray(data) ? data : [])
+    } catch {
+      setAvailableSlots([])
+    }
+  }
+
   React.useEffect(() => {
     fetchSites()
+    fetchAvailableSlots()
   }, [])
 
   React.useEffect(() => {
@@ -137,20 +199,34 @@ function DashboardContent() {
 
   if (sites.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-          <Globe className="h-10 w-10 text-muted-foreground" />
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <PageHeader title="Mis Sitios" />
+          <Link href="/create">
+            <Button className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Sitio
+            </Button>
+          </Link>
         </div>
-        <h2 className="mt-6 text-xl font-semibold">No tienes sitios aún</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Crea tu primer sitio WordPress en segundos
-        </p>
-        <Link href="/create" className="mt-6">
-          <Button size="lg">
-            <Plus className="mr-2 h-5 w-5" />
-            Crea tu primer sitio
-          </Button>
-        </Link>
+        {availableSlots.length > 0 && <AvailableSlotsAccordion slots={availableSlots} />}
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <Globe className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h2 className="mt-6 text-xl font-semibold">No tienes sitios aún</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Crea tu primer sitio WordPress en segundos
+          </p>
+          {availableSlots.length === 0 && (
+            <Link href="/create" className="mt-6">
+              <Button size="lg">
+                <Plus className="mr-2 h-5 w-5" />
+                Crea tu primer sitio
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
     )
   }
@@ -166,6 +242,8 @@ function DashboardContent() {
           </Button>
         </Link>
       </div>
+      {availableSlots.length > 0 && <AvailableSlotsAccordion slots={availableSlots} />}
+
       <div className="flex flex-col gap-4">
         {sites.map((site) => (
           <SiteCard key={site.id} site={site} onDelete={handleDeleteSite} />

@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils"
 
 interface SiteStatusBadgeProps {
-  status: "provisioning" | "deploying" | "active" | "stopped" | "error"
+  status: "provisioning" | "deploying" | "active" | "stopped" | "error" | "suspended"
 }
 
 export function SiteStatusBadge({ status }: SiteStatusBadgeProps) {
@@ -33,6 +33,11 @@ export function SiteStatusBadge({ status }: SiteStatusBadgeProps) {
       class: "text-red-600 dark:text-red-400",
       animate: false,
     },
+    suspended: {
+      label: "Suspendido",
+      class: "text-orange-600 dark:text-orange-400",
+      animate: false,
+    },
   }
 
   const { label, class: colorClass, animate } = config[status] || config.deploying
@@ -51,7 +56,8 @@ export function SiteStatusBadge({ status }: SiteStatusBadgeProps) {
             "inline-block h-2 w-2 rounded-full",
             status === "active" && "bg-green-500",
             status === "error" && "bg-red-500",
-            status === "stopped" && "bg-gray-400"
+            status === "stopped" && "bg-gray-400",
+            status === "suspended" && "bg-orange-500"
           )}
         />
       )}
