@@ -52,8 +52,6 @@ import {
   Square,
   Play,
   MoreVertical,
-  Check,
-  Shield,
   Loader2,
   Info,
   Plus,
@@ -393,34 +391,6 @@ export default function SiteDetailPage() {
                   <p className="text-xs text-muted-foreground">
                     {storageMB} MB used of {storageLimitMB} MB
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <p className="text-sm font-medium">Performance</p>
-                  <button className="text-sm text-primary hover:underline">View</button>
-                </div>
-                <div className="mt-4 flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-500" />
-                  <span>Running smoothly</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <p className="text-sm font-medium">Security</p>
-                  <button className="text-sm text-primary hover:underline">View</button>
-                </div>
-                <div className="mt-4 flex items-center gap-2 text-sm">
-                  <Shield className="h-4 w-4 text-green-500" />
-                  <span>Website is safe</span>
                 </div>
               </CardContent>
             </Card>
