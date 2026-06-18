@@ -4,10 +4,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Globe, Zap, Shield, Headphones, Server, Cloud, Check, Menu, X, Sun, Moon, Star, Loader2 } from "lucide-react"
-import { useTheme } from "next-themes"
+import { Globe, Zap, Shield, Headphones, Server, Cloud, Check, Star, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { getToken, api } from "@/lib/api-client"
+import { MarketingLayout } from "@/components/marketing-layout"
 import * as React from "react"
 
 const features = [
@@ -27,14 +27,9 @@ const testimonials = [
 
 export default function HomePage() {
   const router = useRouter()
-  const [menuOpen, setMenuOpen] = React.useState(false)
-  const [mounted, setMounted] = React.useState(false)
   const [checking, setChecking] = React.useState(true)
   const [plans, setPlans] = React.useState<any[]>([])
   const [loadingPlans, setLoadingPlans] = React.useState(true)
-  const { theme, setTheme } = useTheme()
-
-  React.useEffect(() => setMounted(true), [])
 
   React.useEffect(() => {
     if (getToken()) {
@@ -54,55 +49,8 @@ export default function HomePage() {
 
   if (checking) return null
 
-  const scrollTo = (id: string) => {
-    setMenuOpen(false)
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
-  }
-
   return (
-    <div className="flex min-h-screen flex-col">
-      {/* Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2">
-            <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-8 w-auto dark:hidden" />
-            <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-8 w-auto dark:block" />
-          </Link>
-          <nav className="hidden items-center gap-2 md:flex">
-            <Button variant="link" onClick={() => scrollTo("features")} className="text-sm text-muted-foreground hover:text-foreground">Características</Button>
-            <Button variant="link" onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground hover:text-foreground">Planes</Button>
-            <Button variant="link" onClick={() => scrollTo("why")} className="text-sm text-muted-foreground hover:text-foreground">Por qué WPFacil</Button>
-          </nav>
-          <div className="hidden items-center gap-1 md:flex">
-            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {mounted && theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
-            <Button variant="ghost" asChild><Link href="/login">Iniciar Sesión</Link></Button>
-            <Button asChild><Link href="/register">Comenzar ahora</Link></Button>
-          </div>
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-          </Button>
-        </div>
-        {menuOpen && (
-          <div className="border-t bg-background p-4 md:hidden">
-            <nav className="flex flex-col gap-1">
-              <Button variant="ghost" onClick={() => scrollTo("features")} className="justify-start text-sm text-muted-foreground hover:text-foreground">Características</Button>
-              <Button variant="ghost" onClick={() => scrollTo("pricing")} className="justify-start text-sm text-muted-foreground hover:text-foreground">Planes</Button>
-              <Button variant="ghost" onClick={() => scrollTo("why")} className="justify-start text-sm text-muted-foreground hover:text-foreground">Por qué WPFacil</Button>
-              <div className="flex flex-col gap-2 pt-2 border-t">
-                <Button variant="ghost" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                  {mounted && theme === "dark" ? <Sun className="size-4 mr-2" /> : <Moon className="size-4 mr-2" />}
-                  {mounted && theme === "dark" ? "Modo claro" : "Modo oscuro"}
-                </Button>
-                <Button variant="outline" asChild><Link href="/login">Iniciar Sesión</Link></Button>
-                <Button asChild><Link href="/register">Comenzar ahora</Link></Button>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
-
+    <MarketingLayout>
       <main>
         {/* Hero */}
         <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
@@ -233,9 +181,6 @@ export default function HomePage() {
               <div className="mt-12 grid gap-6 md:grid-cols-3">
                 {plans.map((plan) => {
                   const isPopular = plan.slug === "pro"
-                  const storageLabel = plan.maxStorage >= 1024
-                    ? `${(plan.maxStorage / 1024).toFixed(0)} GB`
-                    : `${plan.maxStorage} MB`
                   return (
                     <Card key={plan.slug} className={isPopular ? "relative border-primary shadow-lg overflow-visible" : ""}>
                       {isPopular && (
@@ -250,22 +195,12 @@ export default function HomePage() {
                       </CardHeader>
                       <CardContent className="pt-6">
                         <ul className="space-y-3">
-                          <li className="flex items-center gap-2 text-sm">
-                            <Check className="size-4 text-green-500 shrink-0" />
-                            {storageLabel} almacenamiento
-                          </li>
-                          <li className="flex items-center gap-2 text-sm">
-                            <Check className="size-4 text-green-500 shrink-0" />
-                            SSL automático
-                          </li>
-                          <li className="flex items-center gap-2 text-sm">
-                            <Check className="size-4 text-green-500 shrink-0" />
-                            CDN global
-                          </li>
-                          <li className="flex items-center gap-2 text-sm">
-                            <Check className="size-4 text-green-500 shrink-0" />
-                            Soporte 24/7
-                          </li>
+                          {(plan.features || []).map((feature: string) => (
+                            <li key={feature} className="flex items-center gap-2 text-sm">
+                              <Check className="size-4 text-green-500 shrink-0" />
+                              {feature}
+                            </li>
+                          ))}
                         </ul>
                         <Button className="mt-6 w-full h-12 px-8 text-base" size="lg" variant={isPopular ? "default" : "outline"} asChild>
                           <Link href="/register">Comenzar ahora</Link>
@@ -323,47 +258,6 @@ export default function HomePage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t bg-background/80 backdrop-blur-md py-12">
-        <div className="mx-auto max-w-6xl px-4">
-          <div className="grid gap-8 md:grid-cols-4">
-            <div className="md:col-span-1">
-              <a className="flex items-center gap-2">
-                <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-6 w-auto dark:hidden" />
-                <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-6 w-auto dark:block" />
-              </a>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Plataforma de hosting WordPress ultrarrápido y fácil de usar.
-              </p>
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-semibold">Producto</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><button onClick={() => scrollTo("features")} className="hover:text-foreground transition-colors">Características</button></li>
-                <li><button onClick={() => scrollTo("pricing")} className="hover:text-foreground transition-colors">Planes</button></li>
-                <li><button onClick={() => scrollTo("why")} className="hover:text-foreground transition-colors">Por qué WPFacil</button></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-semibold">Recursos</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link href="/login" className="hover:text-foreground transition-colors">Iniciar sesión</Link></li>
-                <li><Link href="/register" className="hover:text-foreground transition-colors">Crear cuenta</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="mb-3 text-sm font-semibold">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><span className="hover:text-foreground transition-colors cursor-pointer">Términos del servicio</span></li>
-                <li><span className="hover:text-foreground transition-colors cursor-pointer">Política de privacidad</span></li>
-              </ul>
-            </div>
-          </div>
-          <div className="mt-10 border-t pt-6 text-center text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} WPFacil. Todos los derechos reservados.
-          </div>
-        </div>
-      </footer>
-    </div>
+    </MarketingLayout>
   )
 }

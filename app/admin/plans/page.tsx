@@ -41,6 +41,7 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
     price: Number(plan.price),
     priceId: plan.priceId || "",
     maxStorage: plan.maxStorage,
+    features: (plan.features || []).join("\n"),
     isActive: plan.isActive,
   })
 
@@ -50,6 +51,7 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
       price: Number(plan.price),
       priceId: plan.priceId || "",
       maxStorage: plan.maxStorage,
+      features: (plan.features || []).join("\n"),
       isActive: plan.isActive,
     })
   }, [plan])
@@ -57,10 +59,15 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
   async function handleSave() {
     setSaving(true)
     try {
+      const features = form.features
+        .split("\n")
+        .map((f: string) => f.trim())
+        .filter((f: string) => f.length > 0)
       const payload: any = {
         name: form.name,
         price: form.price,
         maxStorage: form.maxStorage,
+        features,
         isActive: form.isActive,
       }
       if (form.priceId) payload.priceId = form.priceId
@@ -106,6 +113,16 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
             <Label htmlFor="plan-storage">Almacenamiento (GB)</Label>
             <Input id="plan-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="plan-features">Features (una por línea)</Label>
+            <textarea
+              id="plan-features"
+              value={form.features}
+              onChange={(e) => setForm({ ...form, features: e.target.value })}
+              rows={5}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
           <div className="flex items-center gap-2">
             <Checkbox
               id="plan-active"
@@ -138,6 +155,7 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
     price: 0,
     priceId: "",
     maxStorage: 10,
+    features: "",
     isActive: true,
   })
 
@@ -148,11 +166,16 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
     }
     setSaving(true)
     try {
+      const features = form.features
+        .split("\n")
+        .map((f: string) => f.trim())
+        .filter((f: string) => f.length > 0)
       const payload: any = {
         name: form.name,
         slug: form.slug,
         price: form.price,
         maxStorage: form.maxStorage,
+        features,
         isActive: form.isActive,
       }
       if (form.priceId) payload.priceId = form.priceId
@@ -160,7 +183,7 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
       await api.post("/api/admin/plans", payload)
       toast.success("Plan creado")
       setOpen(false)
-      setForm({ name: "", slug: "", price: 0, priceId: "", maxStorage: 10, isActive: true })
+      setForm({ name: "", slug: "", price: 0, priceId: "", maxStorage: 10, features: "", isActive: true })
       onCreated()
     } catch (err: any) {
       toast.error(err?.message || "Error al crear plan")
@@ -209,6 +232,16 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
           <div className="space-y-2">
             <Label htmlFor="create-storage">Almacenamiento (GB)</Label>
             <Input id="create-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="create-features">Features (una por línea)</Label>
+            <textarea
+              id="create-features"
+              value={form.features}
+              onChange={(e) => setForm({ ...form, features: e.target.value })}
+              rows={5}
+              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
