@@ -38,6 +38,8 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
   const [saving, setSaving] = React.useState(false)
   const [form, setForm] = React.useState({
     name: plan.name,
+    group: plan.group || "basic",
+    period: plan.period || "monthly",
     price: Number(plan.price),
     priceId: plan.priceId || "",
     maxStorage: plan.maxStorage,
@@ -48,6 +50,8 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
   React.useEffect(() => {
     setForm({
       name: plan.name,
+      group: plan.group || "basic",
+      period: plan.period || "monthly",
       price: Number(plan.price),
       priceId: plan.priceId || "",
       maxStorage: plan.maxStorage,
@@ -65,6 +69,8 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
         .filter((f: string) => f.length > 0)
       const payload: any = {
         name: form.name,
+        group: form.group,
+        period: form.period,
         price: form.price,
         maxStorage: form.maxStorage,
         features,
@@ -96,9 +102,42 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
           <DialogDescription>Modifica los detalles del plan {plan.name}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="plan-name">Nombre</Label>
-            <Input id="plan-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="plan-name">Nombre</Label>
+              <Input id="plan-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="plan-slug">Slug</Label>
+              <Input id="plan-slug" value={plan.slug} disabled />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="plan-group">Grupo</Label>
+              <select
+                id="plan-group"
+                value={form.group}
+                onChange={(e) => setForm({ ...form, group: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="basic">Básico</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="plan-period">Periodo</Label>
+              <select
+                id="plan-period"
+                value={form.period}
+                onChange={(e) => setForm({ ...form, period: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="monthly">Mensual</option>
+                <option value="annual">Anual</option>
+              </select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="plan-price">Precio ($)</Label>
@@ -152,6 +191,8 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
   const [form, setForm] = React.useState({
     name: "",
     slug: "",
+    group: "basic",
+    period: "monthly",
     price: 0,
     priceId: "",
     maxStorage: 10,
@@ -173,6 +214,8 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
       const payload: any = {
         name: form.name,
         slug: form.slug,
+        group: form.group,
+        period: form.period,
         price: form.price,
         maxStorage: form.maxStorage,
         features,
@@ -183,7 +226,7 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
       await api.post("/api/admin/plans", payload)
       toast.success("Plan creado")
       setOpen(false)
-      setForm({ name: "", slug: "", price: 0, priceId: "", maxStorage: 10, features: "", isActive: true })
+      setForm({ name: "", slug: "", group: "basic", period: "monthly", price: 0, priceId: "", maxStorage: 10, features: "", isActive: true })
       onCreated()
     } catch (err: any) {
       toast.error(err?.message || "Error al crear plan")
@@ -218,6 +261,33 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") })}
               />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="create-group">Grupo</Label>
+              <select
+                id="create-group"
+                value={form.group}
+                onChange={(e) => setForm({ ...form, group: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="basic">Básico</option>
+                <option value="pro">Pro</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="create-period">Periodo</Label>
+              <select
+                id="create-period"
+                value={form.period}
+                onChange={(e) => setForm({ ...form, period: e.target.value })}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="monthly">Mensual</option>
+                <option value="annual">Anual</option>
+              </select>
             </div>
           </div>
           <div className="space-y-2">
@@ -315,6 +385,8 @@ export default function AdminPlansPage() {
   const columns = [
     { key: "name", label: "Nombre" },
     { key: "slug", label: "Slug", className: "hidden md:table-cell" },
+    { key: "group", label: "Grupo", className: "hidden md:table-cell" },
+    { key: "period", label: "Periodo", className: "hidden md:table-cell" },
     {
       key: "price",
       label: "Precio",

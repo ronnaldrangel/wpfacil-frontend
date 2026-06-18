@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +15,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { SiteStatusBadge } from "@/components/site-status-badge"
-import { ExternalLink, Settings, Trash2, MoreVertical, ArrowUpRight, AlertTriangle, Clock } from "lucide-react"
+import { ExternalLink, Settings, Trash2, MoreVertical, ArrowUpRight, AlertTriangle, Clock, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
@@ -52,8 +53,10 @@ interface SiteCardProps {
 
 export function SiteCard({ site, onDelete }: SiteCardProps) {
   const router = useRouter()
+  const [deleting, setDeleting] = React.useState(false)
 
   async function handleDelete() {
+    setDeleting(true)
     try {
       await api.delete(`/api/sites/${site.id}`)
       addNotification(`Sitio "${site.name}" eliminado`)
@@ -62,6 +65,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       router.refresh()
     } catch {
       toast.error("Error al eliminar el sitio")
+      setDeleting(false)
     }
   }
 
@@ -76,6 +80,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
 
   const domain = site.domain || `${site.subdomain}.${WILDCARD}`
   const isDeploying = site.status === "deploying" || site.status === "provisioning"
+  const isBusy = deleting || isDeploying
 
   function ActionsMenu({ variant = "desktop" }: { variant?: "mobile" | "desktop" }) {
     const isMobile = variant === "mobile"
@@ -83,11 +88,11 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           {isMobile ? (
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" disabled={deleting}>
               <MoreVertical className="h-4 w-4" />
             </Button>
           ) : (
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" disabled={deleting}>
               <MoreVertical className="h-4 w-4" />
             </Button>
           )}
@@ -127,7 +132,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
   }
 
   return (
-    <Card className="w-full overflow-hidden transition-all hover:shadow-md">
+    <Card className="relative w-full overflow-hidden transition-all hover:shadow-md">
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
@@ -150,7 +155,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                   {site.plan}
                 </span>
                 <div className="ml-auto flex items-center gap-1 sm:hidden">
-                  {isDeploying ? (
+                  {isBusy ? (
                     <Button variant="outline" size="icon" disabled>
                       <Settings className="h-4 w-4" />
                     </Button>
@@ -161,7 +166,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                       </Button>
                     </Link>
                   )}
-                  {isDeploying ? (
+                  {isBusy ? (
                     <Button variant="outline" size="icon" disabled>
                       <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -190,7 +195,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
           </div>
 
           <div className="hidden sm:flex sm:w-auto sm:items-center sm:gap-1">
-            {isDeploying ? (
+            {isBusy ? (
               <Button variant="outline" size="sm" disabled>
                 <Settings className="mr-1 h-3.5 w-3.5" />
                 Gestionar
@@ -203,7 +208,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                 </Button>
               </Link>
             )}
-            {isDeploying ? (
+            {isBusy ? (
               <Button variant="outline" size="sm" disabled>
                 <ExternalLink className="mr-1 h-3.5 w-3.5" />
                 WP Admin
@@ -218,6 +223,12 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
           </div>
         </div>
       </CardContent>
+      {deleting && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-background/70 backdrop-blur-sm">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-sm font-medium text-foreground">Eliminando...</span>
+        </div>
+      )}
     </Card>
   )
 }

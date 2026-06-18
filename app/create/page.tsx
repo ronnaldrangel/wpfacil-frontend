@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CreateSiteSteps } from "@/components/create-site-steps"
+import { PeriodToggle } from "@/components/period-toggle"
 import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
 import {
@@ -21,6 +22,8 @@ import {
   Lock,
   Sparkles,
   AlertTriangle,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -45,10 +48,16 @@ function CreateSiteContent() {
   const [plans, setPlans] = React.useState<any[]>([])
   const [loadingPlans, setLoadingPlans] = React.useState(true)
   const [selectedPlan, setSelectedPlan] = React.useState(slotPlan || "")
+  const [period, setPeriod] = React.useState<"monthly" | "annual">("monthly")
+  const [showPassword, setShowPassword] = React.useState(false)
   const [form, setForm] = React.useState({
     name: "",
     subdomain: "",
     useCustomDomain: false,
+    wpTitle: "",
+    wpAdminUser: "",
+    wpAdminEmail: "",
+    wpAdminPassword: "",
   })
   const [domainMode, setDomainMode] = React.useState<"free" | "other">("free")
   const [freePrefix, setFreePrefix] = React.useState("")
@@ -56,17 +65,24 @@ function CreateSiteContent() {
 
   React.useEffect(() => {
     api
-      .get<any[]>("/api/plans")
+      .get<any[]>('/api/plans')
       .then((data) => {
         setPlans(data)
-        if (data.length > 0 && !slotPlan) setSelectedPlan(data[0].slug)
+        if (slotPlan) {
+          setSelectedPlan(slotPlan)
+          const p = data.find((p) => p.slug === slotPlan)
+          if (p) setPeriod(p.period)
+        } else {
+          const first = data.find((p) => p.period === period)
+          if (first) setSelectedPlan(first.slug)
+        }
       })
       .catch(() => {})
       .finally(() => setLoadingPlans(false))
   }, [])
 
   React.useEffect(() => {
-    if (step === 3 && !randomSuffix) {
+    if (step === 4 && !randomSuffix) {
       const prefix = form.name ? slugify(form.name) : "sitio"
       const suffix = Math.random().toString(36).substring(2, 8)
       setFreePrefix(prefix)
@@ -97,17 +113,25 @@ function CreateSiteContent() {
     setForm((prev) => ({ ...prev, subdomain: `${prefix}-${randomSuffix}` }))
   }
 
+  const totalSteps = slotId ? 4 : 5
+
   function canContinue() {
     if (step === 1) return creationType === "new"
     if (step === 2) return !!form.name
     if (step === 3) {
+      return (
+        !!form.wpTitle &&
+        !!form.wpAdminUser &&
+        !!form.wpAdminEmail &&
+        form.wpAdminPassword.length >= 8
+      )
+    }
+    if (step === 4) {
       if (domainMode === "free") return !!freePrefix && !!randomSuffix
       return !!form.subdomain
     }
     return !!selectedPlan
   }
-
-  const totalSteps = slotId ? 3 : 4
 
   function handleNext() {
     if (step < totalSteps) {
@@ -133,13 +157,18 @@ function CreateSiteContent() {
     }
     setLoading(true)
     try {
+      const payload = {
+        name: form.name,
+        subdomain: form.subdomain,
+        plan: selectedPlan,
+        slotId,
+        wpTitle: form.wpTitle,
+        wpAdminUser: form.wpAdminUser,
+        wpAdminEmail: form.wpAdminEmail,
+        wpAdminPassword: form.wpAdminPassword,
+      }
       if (slotId) {
-        await api.post("/api/sites", {
-          name: form.name,
-          subdomain: form.subdomain,
-          plan: selectedPlan,
-          slotId,
-        })
+        await api.post("/api/sites", payload)
         toast.success("Sitio creado. Desplegando...")
         router.push("/dashboard")
         return
@@ -147,6 +176,10 @@ function CreateSiteContent() {
       sessionStorage.setItem("wpfacil_create_name", form.name)
       sessionStorage.setItem("wpfacil_create_subdomain", form.subdomain)
       sessionStorage.setItem("wpfacil_create_plan", selectedPlan)
+      sessionStorage.setItem("wpfacil_create_wpTitle", form.wpTitle)
+      sessionStorage.setItem("wpfacil_create_wpAdminUser", form.wpAdminUser)
+      sessionStorage.setItem("wpfacil_create_wpAdminEmail", form.wpAdminEmail)
+      sessionStorage.setItem("wpfacil_create_wpAdminPassword", form.wpAdminPassword)
       const res = await api.post<{ url: string }>("/api/stripe/checkout", {
         planId: plan.id,
       })
@@ -156,6 +189,28 @@ function CreateSiteContent() {
       setLoading(false)
     }
   }
+
+  const groupedPlans = React.useMemo(() => {
+    const groups: Record<string, any[]> = {}
+    for (const plan of plans) {
+      if (plan.period !== period) continue
+      if (!groups[plan.group]) groups[plan.group] = []
+      groups[plan.group].push(plan)
+    }
+    const order = ["basic", "pro", "enterprise"]
+    return order
+      .map((key) => ({ group: key, plans: groups[key] || [] }))
+      .filter((g) => g.plans.length > 0)
+  }, [plans, period])
+
+  React.useEffect(() => {
+    if (slotPlan) return
+    const current = plans.find((p) => p.slug === selectedPlan)
+    if (!current || current.period !== period) {
+      const first = plans.find((p) => p.period === period)
+      if (first) setSelectedPlan(first.slug)
+    }
+  }, [period, plans, selectedPlan, slotPlan])
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -194,8 +249,9 @@ function CreateSiteContent() {
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
               {step === 1 && "¿Qué quieres hacer?"}
               {step === 2 && "Nombra tu sitio web"}
-              {step === 3 && "Configura tu dominio"}
-              {step === 4 && "Selecciona un plan"}
+              {step === 3 && "Configura tu WordPress"}
+              {step === 4 && "Configura tu dominio"}
+              {step === 5 && "Selecciona un plan"}
             </h1>
             <p className="text-base text-muted-foreground sm:text-lg">
               {step === 1 &&
@@ -203,9 +259,11 @@ function CreateSiteContent() {
               {step === 2 &&
                 "Elige un nombre para identificar tu sitio en el panel."}
               {step === 3 &&
-                "Elige el subdominio que tendrá tu sitio."}
+                "Define el título y los datos del administrador de tu WordPress."}
               {step === 4 &&
-                "Selecciona el plan que mejor se adapte a tu sitio."}
+                "Elige el subdominio que tendrá tu sitio."}
+              {step === 5 &&
+                "Selecciona el plan y la frecuencia de pago que prefieras."}
             </p>
           </div>
 
@@ -292,6 +350,73 @@ function CreateSiteContent() {
             )}
 
             {step === 3 && (
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="wp-title" className="text-base font-medium">
+                    Título del sitio
+                  </Label>
+                  <Input
+                    id="wp-title"
+                    placeholder="Mi sitio WordPress"
+                    value={form.wpTitle}
+                    onChange={(e) => setForm((prev) => ({ ...prev, wpTitle: e.target.value }))}
+                    className="h-12 text-base focus-visible:ring-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wp-admin-user" className="text-base font-medium">
+                    Usuario administrador
+                  </Label>
+                  <Input
+                    id="wp-admin-user"
+                    placeholder="admin"
+                    value={form.wpAdminUser}
+                    onChange={(e) => setForm((prev) => ({ ...prev, wpAdminUser: e.target.value }))}
+                    className="h-12 text-base focus-visible:ring-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wp-admin-email" className="text-base font-medium">
+                    Correo del administrador
+                  </Label>
+                  <Input
+                    id="wp-admin-email"
+                    type="email"
+                    placeholder="admin@tusitio.com"
+                    value={form.wpAdminEmail}
+                    onChange={(e) => setForm((prev) => ({ ...prev, wpAdminEmail: e.target.value }))}
+                    className="h-12 text-base focus-visible:ring-primary"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wp-admin-password" className="text-base font-medium">
+                    Contraseña del administrador
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="wp-admin-password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Mínimo 8 caracteres"
+                      value={form.wpAdminPassword}
+                      onChange={(e) => setForm((prev) => ({ ...prev, wpAdminPassword: e.target.value }))}
+                      className="h-12 pr-10 text-base focus-visible:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Debe tener al menos 8 caracteres.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {step === 4 && (
               <RadioGroup
                 value={domainMode}
                 onValueChange={(value) => setDomainMode(value as "free" | "other")}
@@ -385,56 +510,80 @@ function CreateSiteContent() {
               </RadioGroup>
             )}
 
-            {step === 4 && (
-              <div>
+            {step === 5 && (
+              <div className="space-y-6">
+                {!slotPlan && (
+                  <div className="flex justify-center">
+                    <PeriodToggle value={period} onChange={setPeriod} />
+                  </div>
+                )}
+
                 {loadingPlans ? (
                   <div className="flex justify-center py-8">
                     <Loader2 className="size-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {(slotPlan ? plans.filter((p) => p.slug === slotPlan) : plans).map((plan) => (
-                      <button
-                        type="button"
-                        key={plan.slug}
-                        onClick={() => !slotId && setSelectedPlan(plan.slug)}
-                        className={cn(
-                          "relative rounded-xl border-2 p-5 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          selectedPlan === plan.slug
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50",
-                          slotId && "cursor-default"
-                        )}
-                      >
-                        <div className="space-y-4">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="font-semibold">{plan.name}</h3>
-                            {selectedPlan === plan.slug && (
-                              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                                <Check className="h-3.5 w-3.5" />
+                    {groupedPlans.map(({ group, plans: groupPlans }) =>
+                      groupPlans.map((plan) => (
+                        <button
+                          type="button"
+                          key={plan.slug}
+                          onClick={() => !slotId && setSelectedPlan(plan.slug)}
+                          className={cn(
+                            "relative rounded-xl border-2 p-5 text-left transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            selectedPlan === plan.slug
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50",
+                            slotId && "cursor-default"
+                          )}
+                        >
+                          <div className="space-y-4">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h3 className="font-semibold">{plan.name}</h3>
+                                <p className="text-xs text-muted-foreground capitalize">
+                                  {group} · {period === "monthly" ? "mensual" : "anual"}
+                                </p>
                               </div>
-                            )}
-                          </div>
-                          <div>
-                            <span className="text-2xl font-bold">
-                              ${Number(plan.price).toFixed(2)}
-                            </span>
-                            <span className="text-sm text-muted-foreground">/mes</span>
-                          </div>
-                          <ul className="space-y-2 text-sm">
-                            <li className="flex items-center gap-2">
-                              <Check className="size-4 text-green-500" />
-                              <span>
-                                {plan.maxStorage >= 1024
-                                  ? `${(plan.maxStorage / 1024).toFixed(0)} GB`
-                                  : `${plan.maxStorage} MB`}{" "}
-                                almacenamiento
+                              {selectedPlan === plan.slug && (
+                                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                  <Check className="h-3.5 w-3.5" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <span className="text-2xl font-bold">
+                                ${Number(plan.price).toFixed(2)}
                               </span>
-                            </li>
-                          </ul>
-                        </div>
-                      </button>
-                    ))}
+                              <span className="text-sm text-muted-foreground">
+                                /{period === "monthly" ? "mes" : "año"}
+                              </span>
+                            </div>
+                            <ul className="space-y-2 text-sm">
+                              {Array.isArray(plan.features) && plan.features.length > 0 ? (
+                                plan.features.map((feature: string, idx: number) => (
+                                  <li key={idx} className="flex items-start gap-2">
+                                    <Check className="mt-0.5 size-4 shrink-0 text-green-500" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))
+                              ) : (
+                                <li className="flex items-center gap-2">
+                                  <Check className="size-4 text-green-500" />
+                                  <span>
+                                    {plan.maxStorage >= 1024
+                                      ? `${(plan.maxStorage / 1024).toFixed(0)} GB`
+                                      : `${plan.maxStorage} MB`}{" "}
+                                    almacenamiento
+                                  </span>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        </button>
+                      ))
+                    )}
                   </div>
                 )}
               </div>

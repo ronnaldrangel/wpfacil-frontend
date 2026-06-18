@@ -127,6 +127,10 @@ function DashboardContent() {
     const name = sessionStorage.getItem("wpfacil_create_name")
     const subdomain = sessionStorage.getItem("wpfacil_create_subdomain")
     const plan = sessionStorage.getItem("wpfacil_create_plan")
+    const wpTitle = sessionStorage.getItem("wpfacil_create_wpTitle") || name || ""
+    const wpAdminUser = sessionStorage.getItem("wpfacil_create_wpAdminUser") || ""
+    const wpAdminEmail = sessionStorage.getItem("wpfacil_create_wpAdminEmail") || ""
+    const wpAdminPassword = sessionStorage.getItem("wpfacil_create_wpAdminPassword") || ""
     if (!name || !subdomain || !plan) return
 
     processedRef.current = true
@@ -139,7 +143,15 @@ function DashboardContent() {
           toast.error("El pago no fue completado")
           return
         }
-        const site = await api.post<{ id: string }>("/api/sites", { name, subdomain, plan })
+        const site = await api.post<{ id: string }>("/api/sites", {
+          name,
+          subdomain,
+          plan,
+          wpTitle,
+          wpAdminUser,
+          wpAdminEmail,
+          wpAdminPassword,
+        })
         try {
           await api.post("/api/stripe/attach-subscription", { sessionId, siteId: site.id })
         } catch (err: any) {
@@ -149,6 +161,10 @@ function DashboardContent() {
         sessionStorage.removeItem("wpfacil_create_name")
         sessionStorage.removeItem("wpfacil_create_subdomain")
         sessionStorage.removeItem("wpfacil_create_plan")
+        sessionStorage.removeItem("wpfacil_create_wpTitle")
+        sessionStorage.removeItem("wpfacil_create_wpAdminUser")
+        sessionStorage.removeItem("wpfacil_create_wpAdminEmail")
+        sessionStorage.removeItem("wpfacil_create_wpAdminPassword")
         addNotification(`Sitio "${name}" creado exitosamente`)
         toast.success("Sitio creado. Desplegando...")
         router.replace("/dashboard")

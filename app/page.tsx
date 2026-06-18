@@ -8,6 +8,7 @@ import { Globe, Zap, Shield, Headphones, Server, Cloud, Check, Star, Loader2 } f
 import { useRouter } from "next/navigation"
 import { getToken, api } from "@/lib/api-client"
 import { MarketingLayout } from "@/components/marketing-layout"
+import { PeriodToggle } from "@/components/period-toggle"
 import * as React from "react"
 
 const features = [
@@ -30,6 +31,7 @@ export default function HomePage() {
   const [checking, setChecking] = React.useState(true)
   const [plans, setPlans] = React.useState<any[]>([])
   const [loadingPlans, setLoadingPlans] = React.useState(true)
+  const [period, setPeriod] = React.useState<"monthly" | "annual">("monthly")
 
   React.useEffect(() => {
     if (getToken()) {
@@ -171,6 +173,12 @@ export default function HomePage() {
               <h2 className="text-3xl font-bold md:text-4xl">Planes simples y transparentes</h2>
               <p className="mt-4 text-muted-foreground">Sin sorpresas. Escoge el plan ideal para tu proyecto</p>
             </div>
+            {!loadingPlans && plans.length > 0 && (
+              <div className="mt-8 flex justify-center">
+                <PeriodToggle value={period} onChange={setPeriod} />
+              </div>
+            )}
+
             {loadingPlans ? (
               <div className="mt-12 flex justify-center">
                 <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -178,37 +186,40 @@ export default function HomePage() {
             ) : plans.length === 0 ? (
               <p className="mt-12 text-center text-muted-foreground">No hay planes disponibles en este momento.</p>
             ) : (
-              <div className="mt-12 grid gap-6 md:grid-cols-3">
-                {plans.map((plan) => {
-                  const isPopular = plan.slug === "pro"
-                  return (
-                    <Card key={plan.slug} className={isPopular ? "relative border-primary shadow-lg overflow-visible" : ""}>
-                      {isPopular && (
-                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Popular</Badge>
-                      )}
-                      <CardHeader className="text-center pb-0">
-                        <CardTitle className="text-xl">{plan.name}</CardTitle>
-                        <p className="mt-4">
-                          <span className="text-4xl font-bold">${Number(plan.price).toFixed(2)}</span>
-                          <span className="text-sm text-muted-foreground">/mes</span>
-                        </p>
-                      </CardHeader>
-                      <CardContent className="pt-6">
-                        <ul className="space-y-3">
-                          {(plan.features || []).map((feature: string) => (
-                            <li key={feature} className="flex items-center gap-2 text-sm">
-                              <Check className="size-4 text-green-500 shrink-0" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                        <Button className="mt-6 w-full h-12 px-8 text-base" size="lg" variant={isPopular ? "default" : "outline"} asChild>
-                          <Link href="/register">Comenzar ahora</Link>
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )
-                })}
+              <div className="mt-8 grid gap-6 md:grid-cols-3">
+                {plans
+                  .filter((plan) => plan.period === period)
+                  .sort((a, b) => Number(a.price) - Number(b.price))
+                  .map((plan) => {
+                    const isPopular = plan.group === "pro"
+                    return (
+                      <Card key={plan.slug} className={isPopular ? "relative border-primary shadow-lg overflow-visible" : ""}>
+                        {isPopular && (
+                          <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Popular</Badge>
+                        )}
+                        <CardHeader className="text-center pb-0">
+                          <CardTitle className="text-xl">{plan.name}</CardTitle>
+                          <p className="mt-4">
+                            <span className="text-4xl font-bold">${Number(plan.price).toFixed(2)}</span>
+                            <span className="text-sm text-muted-foreground">/{period === "monthly" ? "mes" : "año"}</span>
+                          </p>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                          <ul className="space-y-3">
+                            {(plan.features || []).map((feature: string) => (
+                              <li key={feature} className="flex items-center gap-2 text-sm">
+                                <Check className="size-4 text-green-500 shrink-0" />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                          <Button className="mt-6 w-full h-12 px-8 text-base" size="lg" variant={isPopular ? "default" : "outline"} asChild>
+                            <Link href="/register">Comenzar ahora</Link>
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )
+                  })}
               </div>
             )}
           </div>
