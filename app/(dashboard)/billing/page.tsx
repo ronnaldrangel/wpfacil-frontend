@@ -2,19 +2,37 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/page-header"
 import { PageLoader } from "@/components/page-loader"
-import { Loader2, CreditCard, ExternalLink } from "lucide-react"
+import { Loader2, ExternalLink, Globe } from "lucide-react"
 import { api, getToken, removeToken } from "@/lib/api-client"
 import { toast } from "sonner"
+import Link from "next/link"
+
+const WILDCARD = process.env.NEXT_PUBLIC_WILDCARD_DOMAIN || "wp.wpfacil.net"
+
+interface Subscription {
+  id: string
+  plan: string
+  status: string
+  currentPeriodEnd: string | null
+  site: {
+    id: string
+    name: string
+    subdomain: string
+    customDomain: string | null
+  }
+}
 
 export default function BillingPage() {
   const router = useRouter()
   const [loading, setLoading] = React.useState(true)
   const [portalLoading, setPortalLoading] = React.useState(false)
   const [hasPortal, setHasPortal] = React.useState(false)
+  const [subscriptions, setSubscriptions] = React.useState<Subscription[]>([])
 
   React.useEffect(() => {
     const token = getToken()
@@ -25,8 +43,12 @@ export default function BillingPage() {
 
     async function fetchBilling() {
       try {
-        const data = await api.get<{ stripeCustomerId: string | null }>("/api/users/me")
-        setHasPortal(!!data.stripeCustomerId)
+        const [userData, subsData] = await Promise.all([
+          api.get<{ stripeCustomerId: string | null }>("/api/users/me"),
+          api.get<Subscription[]>("/api/users/me/subscriptions"),
+        ])
+        setHasPortal(!!userData.stripeCustomerId)
+        setSubscriptions(subsData)
       } catch {
         removeToken()
         router.push("/login")
@@ -49,85 +71,88 @@ export default function BillingPage() {
     }
   }
 
+  function formatDate(dateString?: string | null) {
+    if (!dateString) return "—"
+    return new Date(dateString).toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
+  function getDomain(sub: Subscription) {
+    return sub.site.customDomain || `${sub.site.subdomain}.${WILDCARD}`
+  }
+
   if (loading) {
     return <PageLoader />
   }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Facturación" description="Gestiona tus suscripciones y facturas" />
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Suscripciones</CardTitle>
-            <CardDescription>Cada sitio tiene su propia suscripción</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {hasPortal ? (
-              <>
-                <p className="text-sm text-muted-foreground">
-                  Administra todas las suscripciones de tus sitios desde el portal de Stripe.
-                </p>
-                <Button className="w-full" onClick={handleManageSubscription} disabled={portalLoading}>
-                  {portalLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Ir al Portal de Stripe
-                </Button>
-              </>
-            ) : (
-              <div className="py-6 text-center space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  No tienes métodos de pago registrados. Crea un sitio para comenzar.
-                </p>
-                <Button variant="outline" onClick={() => router.push("/create")}>
-                  Crear un sitio
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Método de Pago</CardTitle>
-            <CardDescription>Administra tus tarjetas</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center py-8">
-            <CreditCard className="h-12 w-12 text-muted-foreground" />
-            <p className="mt-4 text-sm text-muted-foreground text-center">
-              Gestiona tus métodos de pago desde el portal de Stripe
-            </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={handleManageSubscription}
-              disabled={portalLoading || !hasPortal}
-            >
-              Ir al portal de pago
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <PageHeader title="Facturación" description="Gestiona tus suscripciones" />
 
       <Card>
         <CardHeader>
-          <CardTitle>Historial de Facturas</CardTitle>
-          <CardDescription>Todas tus facturas están disponibles en Stripe</CardDescription>
+          <CardTitle>Suscripciones</CardTitle>
+          <CardDescription>Cada sitio tiene su propia suscripción</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-center py-8">
-          <p className="text-sm text-muted-foreground text-center mb-4">
-            Descarga tus facturas desde el portal de Stripe
-          </p>
-          <Button
-            variant="outline"
-            onClick={handleManageSubscription}
-            disabled={portalLoading || !hasPortal}
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Ver facturas en Stripe
-          </Button>
+        <CardContent>
+          {subscriptions.length === 0 ? (
+            <div className="py-8 text-center space-y-4">
+              <p className="text-sm text-muted-foreground">
+                No tienes suscripciones activas. Crea un sitio para comenzar.
+              </p>
+              <Button variant="outline" onClick={() => router.push("/create")}>
+                Crear un sitio
+              </Button>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {subscriptions.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-4 w-4 text-muted-foreground" />
+                      <Link
+                        href={`/dashboard/${sub.site.id}`}
+                        className="font-semibold hover:underline"
+                      >
+                        {sub.site.name}
+                      </Link>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{getDomain(sub)}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3 sm:gap-6">
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Plan:</span>{" "}
+                      <span className="font-medium capitalize">{sub.plan}</span>
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">Próximo pago:</span>{" "}
+                      <span className="font-medium">{formatDate(sub.currentPeriodEnd)}</span>
+                    </div>
+                    <Badge variant={sub.status === "active" ? "default" : "secondary"}>
+                      {sub.status}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
+        {hasPortal && (
+          <CardFooter>
+            <Button className="w-full" onClick={handleManageSubscription} disabled={portalLoading}>
+              {portalLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Ir al Portal de Stripe
+            </Button>
+          </CardFooter>
+        )}
       </Card>
     </div>
   )

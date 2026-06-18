@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Globe, Zap, Shield, Headphones, Server, Cloud, Check, Menu, X, Sun, Moon, Star } from "lucide-react"
 import { useTheme } from "next-themes"
+import { useRouter } from "next/navigation"
+import { getToken } from "@/lib/api-client"
 import * as React from "react"
 
 const features = [
@@ -30,10 +32,23 @@ const testimonials = [
 ]
 
 export default function HomePage() {
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
+  const [checking, setChecking] = React.useState(true)
   const { theme, setTheme } = useTheme()
+
   React.useEffect(() => setMounted(true), [])
+
+  React.useEffect(() => {
+    if (getToken()) {
+      router.replace("/dashboard")
+    } else {
+      setChecking(false)
+    }
+  }, [router])
+
+  if (checking) return null
 
   const scrollTo = (id: string) => {
     setMenuOpen(false)

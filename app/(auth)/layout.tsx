@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 export default function AuthLayout({
   children,
 }: {
@@ -8,16 +10,18 @@ export default function AuthLayout({
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex justify-center">
-            <img
-              src="/logo/logo_theme_white.svg?v=1"
-              alt="WPFacil"
-              className="h-10 w-auto dark:hidden"
-            />
-            <img
-              src="/logo/logo_theme_black.svg?v=1"
-              alt="WPFacil"
-              className="hidden h-10 w-auto dark:block"
-            />
+            <Link href="/">
+              <img
+                src="/logo/logo_theme_white.svg?v=1"
+                alt="WPFacil"
+                className="h-10 w-auto dark:hidden"
+              />
+              <img
+                src="/logo/logo_theme_black.svg?v=1"
+                alt="WPFacil"
+                className="hidden h-10 w-auto dark:block"
+              />
+            </Link>
           </div>
           {children}
         </div>
