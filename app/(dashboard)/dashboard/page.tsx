@@ -92,6 +92,7 @@ function DashboardContent() {
 
   function handleDeleteSite(id: string) {
     setSites((prev) => prev.filter((s) => s.id !== id))
+    fetchAvailableSlots()
   }
 
   async function fetchSites() {
