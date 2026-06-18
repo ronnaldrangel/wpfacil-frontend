@@ -47,7 +47,6 @@ import {
   FolderOpen,
   Database,
   Trash2,
-  RotateCw,
   RefreshCw,
   Square,
   Play,
@@ -314,14 +313,7 @@ export default function SiteDetailPage() {
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => handleAction("redeploy")}
-                disabled={site.status === "deploying" || site.status === "provisioning"}
-              >
-                <RotateCw className="mr-2 h-4 w-4" />
-                Redeploy
-              </Button>
-              <Button
-                variant="secondary"
+                variant="outline"
                 onClick={() => handleAction("reload")}
                 disabled={!isActive}
               >
@@ -392,7 +384,7 @@ export default function SiteDetailPage() {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="h-auto w-full flex-wrap justify-start">
+        <TabsList className="h-auto w-full overflow-x-auto flex-nowrap justify-start scrollbar-none">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="wordpress">WordPress</TabsTrigger>
           <TabsTrigger value="dominio">Dominio</TabsTrigger>
