@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -14,7 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell } from "lucide-react"
+import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell, Video } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -24,6 +25,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user, onLogout }: DashboardLayoutProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   const [notifications, setNotifications] = React.useState<{ id: number; text: string; time: string }[]>([])
@@ -54,6 +56,20 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
             <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
             <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
           </Link>
+          <nav className="hidden md:flex items-center gap-1">
+            <Link
+              href="/videos"
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                pathname === "/videos" || pathname.startsWith("/videos/")
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Video className="h-4 w-4" />
+              Videos
+            </Link>
+          </nav>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {mounted && theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
@@ -116,6 +132,10 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
                 </div>
               </div>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/videos")}>
+                <Video className="mr-2 h-4 w-4" />
+                Videos
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/billing")}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 Facturación

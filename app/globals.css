@@ -129,3 +129,9 @@
     @apply font-sans;
   }
 }
+
+/* ===== video.js v10 skin overrides ===== */
+:root {
+  --media-color-primary: hsl(var(--primary));
+  --media-border-radius: 0.5rem;
+}
