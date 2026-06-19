@@ -71,6 +71,7 @@ interface SiteStats {
   storageUsed: number
   storageLimit: number
   wpAdminUser: string
+  domains: any[]
   subscription: {
     plan: string
     status: string
@@ -83,6 +84,7 @@ interface Site {
   name: string
   subdomain: string
   customDomain: string | null
+  domain?: string
   plan: string
   status: string
   createdAt: string
@@ -99,22 +101,23 @@ export default function SiteDetailPage() {
   const [stats, setStats] = React.useState<SiteStats | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [activeTab, setActiveTab] = React.useState("overview")
-  const [domains, setDomains] = React.useState<any[]>([])
-  const [loadingDomains, setLoadingDomains] = React.useState(false)
   const [addDomainOpen, setAddDomainOpen] = React.useState(false)
   const [newDomain, setNewDomain] = React.useState("")
   const [dnsGuideDomain, setDnsGuideDomain] = React.useState<string | null>(null)
   const [wpInfo, setWpInfo] = React.useState<any>(null)
   const [loadingWpInfo, setLoadingWpInfo] = React.useState(false)
+  const [dbDomains, setDbDomains] = React.useState<any[]>([])
 
   async function fetchAll() {
     try {
-      const [siteData, statsData] = await Promise.all([
+      const [siteData, statsData, domainData] = await Promise.all([
         api.get<Site>(`/api/sites/${id}`),
         api.get<SiteStats>(`/api/sites/${id}/stats`).catch(() => null),
+        api.get<any[]>(`/api/domains/data?siteId=${id}`).catch(() => []),
       ])
       setSite(siteData)
       setStats(statsData)
+      setDbDomains(domainData)
     } catch {
       toast.error("Error al cargar el sitio")
       router.push("/dashboard")
@@ -123,7 +126,7 @@ export default function SiteDetailPage() {
     }
   }
 
-  React.useEffect(() => { fetchAll(); fetchDomains(); fetchWordPressInfo() }, [id])
+  React.useEffect(() => { fetchAll(); fetchWordPressInfo() }, [id])
 
   async function fetchWordPressInfo() {
     setLoadingWpInfo(true)
@@ -134,18 +137,6 @@ export default function SiteDetailPage() {
       setWpInfo(null)
     } finally {
       setLoadingWpInfo(false)
-    }
-  }
-
-  async function fetchDomains() {
-    setLoadingDomains(true)
-    try {
-      const data = await api.get<any[]>(`/api/domains?siteId=${id}`)
-      setDomains(data)
-    } catch {
-      toast.error("Error al cargar dominios")
-    } finally {
-      setLoadingDomains(false)
     }
   }
 
@@ -166,7 +157,6 @@ export default function SiteDetailPage() {
       toast.success("Dominio agregado")
       setNewDomain("")
       setAddDomainOpen(false)
-      fetchDomains()
       fetchAll()
     } catch {
       toast.error("Error al agregar dominio")
@@ -177,10 +167,19 @@ export default function SiteDetailPage() {
     try {
       await api.delete(`/api/domains/${domainId}?siteId=${id}`)
       toast.success("Dominio eliminado")
-      fetchDomains()
       fetchAll()
     } catch {
       toast.error("Error al eliminar dominio")
+    }
+  }
+
+  async function handleSetPrimary(domainId: string) {
+    try {
+      const res = await api.put<{ message: string; host: string }>(`/api/domains/${domainId}/primary?siteId=${id}`)
+      toast.success(`Dominio principal: ${res.host}`)
+      fetchAll()
+    } catch {
+      toast.error("Error al establecer dominio principal")
     }
   }
 
@@ -221,7 +220,7 @@ export default function SiteDetailPage() {
 
   if (!site) return null
 
-  const domain = site.customDomain || `${site.subdomain}.${WILDCARD}`
+  const domain = site.domain || site.customDomain || `${site.subdomain}.${WILDCARD}`
   const isActive = site.status === "active"
   const isStopped = site.status === "stopped"
   const storagePercent = stats ? Math.round((stats.storageUsed / stats.storageLimit) * 100) : 0
@@ -558,26 +557,36 @@ export default function SiteDetailPage() {
               </Dialog>
             </CardHeader>
             <CardContent>
-              {loadingDomains ? (
+              {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
-              ) : domains.filter((d: any) => d.serviceName === "wordpress").length === 0 ? (
+              ) : (stats?.domains || []).filter((d: any) => d.serviceName === "wordpress").length === 0 ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
                   No hay dominios de WordPress configurados en Dokploy.
                 </div>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  {domains
+                  {(stats?.domains || [])
                     .filter((d: any) => d.serviceName === "wordpress")
                     .map((d: any) => {
                       const isOriginalDomain = d.host === `${site.subdomain}.${WILDCARD}`
+                      const dbDomain = dbDomains.find((dd: any) => dd.host === d.host)
+                      const isPrimary = dbDomain?.isPrimary
                       return (
                         <Card key={d.domainId || d.id || d.host}>
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 space-y-1">
-                                <p className="truncate font-semibold">{d.host}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="truncate font-semibold">{d.host}</p>
+                                  {isOriginalDomain && (
+                                    <Badge variant="outline" className="text-xs">Wildcard</Badge>
+                                  )}
+                                  {isPrimary && (
+                                    <Badge className="bg-green-600 text-xs">Principal</Badge>
+                                  )}
+                                </div>
                                 <p className="text-xs text-muted-foreground">
                                   Certificado: {d.certificateType || "—"}
                                 </p>
@@ -593,6 +602,15 @@ export default function SiteDetailPage() {
                                 >
                                   <Info className="h-4 w-4" />
                                 </Button>
+                                {!isOriginalDomain && !isPrimary && dbDomain && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSetPrimary(dbDomain.id)}
+                                  >
+                                    Establecer como principal
+                                  </Button>
+                                )}
                                 {!isOriginalDomain && (
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>

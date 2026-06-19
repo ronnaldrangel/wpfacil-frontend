@@ -24,6 +24,7 @@ interface Subscription {
     name: string
     subdomain: string
     customDomain: string | null
+    domains?: { id: string; host: string; isPrimary: boolean }[]
   }
 }
 
@@ -81,7 +82,8 @@ export default function BillingPage() {
   }
 
   function getDomain(sub: Subscription) {
-    return sub.site?.customDomain || `${sub.site?.subdomain}.${WILDCARD}`
+    const primary = sub.site?.domains?.find((d) => d.isPrimary)
+    return primary?.host || sub.site?.customDomain || `${sub.site?.subdomain}.${WILDCARD}`
   }
 
   if (loading) {

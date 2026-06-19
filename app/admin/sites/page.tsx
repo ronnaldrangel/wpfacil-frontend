@@ -140,12 +140,12 @@ export default function AdminSitesPage() {
       label: "Dominio",
       render: (v: unknown, row: Record<string, unknown>) => (
         <a
-          href={`https://${(row.customDomain as string) || `${v}.${wildcard}`}`}
+          href={`https://${(row.domain as string) || (row.customDomain as string) || `${v}.${wildcard}`}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
         >
-          {(row.customDomain as string) || `${v}.${wildcard}`}
+          {(row.domain as string) || (row.customDomain as string) || `${v}.${wildcard}`}
           <ExternalLink className="h-3 w-3" />
         </a>
       ),
