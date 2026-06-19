@@ -14,8 +14,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell, Video } from "lucide-react"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell, Video, Menu, LayoutDashboard, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const navItems = [
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/videos", label: "Videos", icon: Video },
+]
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -28,6 +39,7 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const [navOpen, setNavOpen] = React.useState(false)
   const [notifications, setNotifications] = React.useState<{ id: number; text: string; time: string }[]>([])
   React.useEffect(() => setMounted(true), [])
   React.useEffect(() => {
@@ -52,23 +64,108 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
     <div className="flex min-h-screen flex-col">
       <header className="flex h-14 items-center justify-center border-b bg-background px-4 lg:px-6">
         <div className="flex w-full max-w-5xl items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
-            <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
-          </Link>
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/videos"
-              className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                pathname === "/videos" || pathname.startsWith("/videos/")
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Video className="h-4 w-4" />
-              Videos
+          <div className="flex items-center gap-2">
+            <Sheet open={navOpen} onOpenChange={setNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-72 gap-0 p-0" showCloseButton={false}>
+                <div className="flex h-14 items-center border-b px-4">
+                  <Link href="/dashboard" onClick={() => setNavOpen(false)}>
+                    <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
+                    <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
+                  </Link>
+                </div>
+                <SheetTitle className="sr-only">Navegación</SheetTitle>
+                <nav className="flex flex-col gap-1 p-4">
+                  {navItems.map((item) => {
+                    const Icon = item.icon
+                    const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setNavOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                          active
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    )
+                  })}
+                </nav>
+                <div className="mt-auto border-t p-4">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-accent transition-colors">
+                        <Avatar className="size-9">
+                          <AvatarImage src={user.avatar} alt={user.name} />
+                          <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-sm font-medium truncate">{user.name}</span>
+                          <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56">
+                      <DropdownMenuItem onClick={() => { router.push("/billing"); setNavOpen(false) }}>
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Facturación
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => { router.push("/profile"); setNavOpen(false) }}>
+                        <User className="mr-2 h-4 w-4" />
+                        Perfil
+                      </DropdownMenuItem>
+                      {user.isAdmin && (
+                        <DropdownMenuItem onClick={() => { router.push("/admin"); setNavOpen(false) }}>
+                          <Shield className="mr-2 h-4 w-4" />
+                          Panel de Administración
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { onLogout(); setNavOpen(false) }}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Cerrar Sesión
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
+              <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
             </Link>
+          </div>
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
@@ -112,12 +209,12 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
             </DropdownMenu>
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2">
+              <Button variant="ghost" className="hidden md:flex items-center gap-2">
                 <Avatar className="size-7">
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <span className="hidden text-sm font-medium md:inline">{user.name}</span>
+                <span className="text-sm font-medium">{user.name}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
@@ -132,10 +229,6 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/videos")}>
-                <Video className="mr-2 h-4 w-4" />
-                Videos
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push("/billing")}>
                 <CreditCard className="mr-2 h-4 w-4" />
                 Facturación

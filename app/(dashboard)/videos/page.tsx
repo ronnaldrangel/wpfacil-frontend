@@ -88,7 +88,7 @@ export default function VideosPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <PageHeader title="Videos" description="Tu biblioteca de videos" />
+        <PageHeader title="Videos" />
         <Button onClick={() => setUploadOpen(true)}>
           <Upload className="mr-2 h-4 w-4" />
           Subir video
