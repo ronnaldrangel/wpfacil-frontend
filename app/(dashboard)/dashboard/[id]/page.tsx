@@ -92,6 +92,7 @@ interface Site {
   dbUser: string
   dbPassword: string
   fbPassword?: string
+  autologinSecret?: string
 }
 
 export default function SiteDetailPage() {
@@ -439,6 +440,23 @@ export default function SiteDetailPage() {
                 label="Status"
                 value={<SiteStatusBadge status={site.status as any} />}
               />
+              {site.autologinSecret && (
+                <InfoRow
+                  label="Auto-login Token"
+                  value={
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(site.autologinSecret || "")
+                        toast.success("Token copiado")
+                      }}
+                      className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline max-w-[200px] truncate inline-block"
+                      title={site.autologinSecret}
+                    >
+                      {site.autologinSecret?.substring(0, 16)}...
+                    </button>
+                  }
+                />
+              )}
             </CardContent>
           </Card>
 
