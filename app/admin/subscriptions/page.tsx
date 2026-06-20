@@ -24,7 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Edit, XCircle, Loader2 } from "lucide-react"
+import { Edit, XCircle, Loader2, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/page-header"
 import { PageLoader } from "@/components/page-loader"
@@ -140,6 +140,112 @@ function CancelSubscriptionDialog({ subId, siteName, onCancel }: { subId: string
   )
 }
 
+function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void> }) {
+  const [open, setOpen] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
+  const [users, setUsers] = React.useState<any[]>([])
+  const [plans, setPlans] = React.useState<any[]>([])
+  const [userId, setUserId] = React.useState("")
+  const [plan, setPlan] = React.useState("")
+
+  React.useEffect(() => {
+    if (open) {
+      Promise.all([
+        api.get<any>("/api/admin/users?page=1&limit=100"),
+        api.get<any[]>("/api/admin/plans"),
+      ])
+        .then(([usersRes, plansRes]) => {
+          setUsers(usersRes.users || [])
+          setPlans(plansRes)
+          if (plansRes.length > 0 && !plan) setPlan(plansRes[0].slug)
+          if (usersRes.users?.length > 0 && !userId) setUserId(usersRes.users[0].id)
+        })
+        .catch(() => {})
+    }
+  }, [open])
+
+  async function handleCreate() {
+    if (!userId || !plan) return
+    setSaving(true)
+    try {
+      await api.post("/api/admin/subscriptions", { userId, plan })
+      await onCreated()
+      setOpen(false)
+      toast.success("Subscripción creada")
+    } catch (err: any) {
+      toast.error(err?.message || "Error al crear subscripción")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Crear subscripción
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Crear subscripción manual</DialogTitle>
+          <DialogDescription>
+            Crea un slot de subscripción para un usuario sin pasar por Stripe. Será perpetua hasta que la canceles manualmente.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Usuario</Label>
+            <select
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+              value={userId}
+              onChange={(e) => setUserId(e.target.value)}
+            >
+              {users.map((u: any) => (
+                <option key={u.id} value={u.id}>
+                  {u.name || u.email} — {u.email}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label>Plan</Label>
+            <div className="grid gap-2 max-h-60 overflow-y-auto">
+              {plans.map((p: any) => (
+                <div
+                  key={p.id}
+                  className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-colors hover:bg-accent ${
+                    plan === p.slug ? "border-primary bg-accent" : ""
+                  }`}
+                  onClick={() => setPlan(p.slug)}
+                >
+                  <div>
+                    <p className="text-sm font-medium">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"} · {p.maxStorage / 1024} GB
+                    </p>
+                  </div>
+                  {plan === p.slug && (
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={handleCreate} disabled={saving || !userId || !plan}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Crear
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function AdminSubscriptionsPage() {
   const [loading, setLoading] = React.useState(true)
   const [subscriptions, setSubscriptions] = React.useState<any[]>([])
@@ -167,9 +273,20 @@ export default function AdminSubscriptionsPage() {
       key: "user",
       label: "Usuario",
       className: "hidden md:table-cell",
-      render: (v: unknown) => (v as any)?.user?.name || "—",
+      render: (v: unknown) => (v as any)?.name || (v as any)?.email || "—",
     },
     { key: "plan", label: "Plan", className: "hidden md:table-cell", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
+    {
+      key: "source",
+      label: "Origen",
+      className: "hidden lg:table-cell",
+      render: (v: unknown) =>
+        v === "manual" ? (
+          <Badge variant="outline">Manual</Badge>
+        ) : (
+          <Badge variant="secondary">Stripe</Badge>
+        ),
+    },
     {
       key: "status",
       label: "Estado",
@@ -239,7 +356,10 @@ export default function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Subscripciones" description="Gestiona las subscripciones de los sitios" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Subscripciones" description="Gestiona las subscripciones de los sitios" />
+        <CreateSubscriptionDialog onCreated={fetchSubscriptions} />
+      </div>
       <AdminDataTable columns={columns} data={subscriptions as unknown as Record<string, unknown>[]} searchKey="plan" />
     </div>
   )

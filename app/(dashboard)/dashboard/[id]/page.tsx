@@ -414,11 +414,11 @@ export default function SiteDetailPage() {
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => handleAction("reload")}
+                onClick={() => handleAction("redeploy")}
                 disabled={!isActive}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Reload
+                Redeploy
               </Button>
               {isStopped ? (
                 <Button onClick={() => handleAction("start")}>
