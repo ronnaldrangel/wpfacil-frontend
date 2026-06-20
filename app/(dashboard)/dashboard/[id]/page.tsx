@@ -432,7 +432,7 @@ export default function SiteDetailPage() {
               <InfoRow label="Title" value={site.name} />
               <InfoRow
                 label="Domain"
-                value={domain}
+                value={<a href={`https://${domain}`} target="_blank" rel="noopener noreferrer" className="hover:underline">{domain}</a>}
                 action={() => setActiveTab("dominio")}
               />
               <InfoRow
@@ -579,7 +579,7 @@ export default function SiteDetailPage() {
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0 space-y-1">
                                 <div className="flex items-center gap-2">
-                                  <p className="truncate font-semibold">{d.host}</p>
+                                  <a href={`https://${d.host}`} target="_blank" rel="noopener noreferrer" className="truncate font-semibold hover:underline">{d.host}</a>
                                   {isOriginalDomain && (
                                     <Badge variant="outline" className="text-xs">Wildcard</Badge>
                                   )}
@@ -726,7 +726,7 @@ export default function SiteDetailPage() {
             <CardContent className="divide-y">
               <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Servidor</Label>
-                <p className="font-mono text-sm">{PMA_URL.replace(/^https?:\/\//, "")}</p>
+                <a href={PMA_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-sm hover:underline">{PMA_URL.replace(/^https?:\/\//, "")}</a>
               </div>
               <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Base de datos</Label>
@@ -751,7 +751,7 @@ export default function SiteDetailPage() {
             <CardContent className="divide-y">
               <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">URL</Label>
-                <p className="font-mono text-sm">https://{site.subdomain}.{FILES_DOMAIN}</p>
+                <a href={`https://${site.subdomain}.${FILES_DOMAIN}`} target="_blank" rel="noopener noreferrer" className="font-mono text-sm hover:underline">https://{site.subdomain}.{FILES_DOMAIN}</a>
               </div>
               <div className="flex items-center justify-between py-3">
                 <Label className="text-xs text-muted-foreground">Usuario</Label>

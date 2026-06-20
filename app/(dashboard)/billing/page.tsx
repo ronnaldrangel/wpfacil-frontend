@@ -128,7 +128,7 @@ export default function BillingPage() {
                             {sub.site.name}
                           </Link>
                         </div>
-                        <p className="text-sm text-muted-foreground">{getDomain(sub)}</p>
+                        <a href={`https://${getDomain(sub)}`} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:underline">{getDomain(sub)}</a>
                       </>
                     ) : (
                       <>
