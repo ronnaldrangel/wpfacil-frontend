@@ -24,6 +24,7 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
+  KeyRound,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -35,6 +36,15 @@ export default function CreateSitePage() {
       <CreateSiteContent />
     </React.Suspense>
   )
+}
+
+function generatePassword(length = 16): string {
+  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+  let pwd = ""
+  for (let i = 0; i < length; i++) {
+    pwd += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return pwd
 }
 
 function CreateSiteContent() {
@@ -399,15 +409,29 @@ function CreateSiteContent() {
                       placeholder="Mínimo 8 caracteres"
                       value={form.wpAdminPassword}
                       onChange={(e) => setForm((prev) => ({ ...prev, wpAdminPassword: e.target.value }))}
-                      className="h-12 pr-10 text-base focus-visible:ring-primary"
+                      className="h-12 pr-20 text-base focus-visible:ring-primary"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      <button
+                        type="button"
+                        title="Generar contraseña"
+                        onClick={() => {
+                          const pwd = generatePassword()
+                          setForm((prev) => ({ ...prev, wpAdminPassword: pwd }))
+                          setShowPassword(true)
+                        }}
+                        className="text-muted-foreground hover:text-primary p-1"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="text-muted-foreground p-1"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Debe tener al menos 8 caracteres.
