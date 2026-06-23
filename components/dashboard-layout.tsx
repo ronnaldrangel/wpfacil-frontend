@@ -74,8 +74,8 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
               <SheetContent side="left" className="w-72 gap-0 p-0" showCloseButton={false}>
                 <div className="flex h-14 items-center border-b px-4">
                   <Link href="/dashboard" onClick={() => setNavOpen(false)}>
-                    <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
-                    <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
+                    <img src="/logo/logo_theme_white.png?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
+                    <img src="/logo/logo_theme_black.png?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
                   </Link>
                 </div>
                 <SheetTitle className="sr-only">Navegación</SheetTitle>
@@ -142,8 +142,8 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
               </SheetContent>
             </Sheet>
             <Link href="/dashboard" className="flex items-center gap-2">
-              <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
-              <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
+              <img src="/logo/logo_theme_white.png?v=1" alt="WPFacil" className="h-7 w-auto dark:hidden" />
+              <img src="/logo/logo_theme_black.png?v=1" alt="WPFacil" className="hidden h-7 w-auto dark:block" />
             </Link>
           </div>
           <nav className="hidden md:flex items-center gap-1">

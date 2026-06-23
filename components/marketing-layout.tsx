@@ -67,8 +67,8 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
       <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-8 w-auto dark:hidden" />
-            <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-8 w-auto dark:block" />
+            <img src="/logo/logo_theme_white.png?v=1" alt="WPFacil" className="h-8 w-auto dark:hidden" />
+            <img src="/logo/logo_theme_black.png?v=1" alt="WPFacil" className="hidden h-8 w-auto dark:block" />
           </Link>
           <nav className="hidden items-center gap-2 md:flex">
             {navLink("features", "Características")}
@@ -79,9 +79,6 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
             </Button>
           </nav>
           <div className="hidden items-center gap-1 md:flex">
-            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {mounted && theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
-            </Button>
             <Button variant="ghost" asChild>
               <Link href="/login">Iniciar Sesión</Link>
             </Button>
@@ -103,10 +100,6 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
                 <Link href="/contact">Contacto</Link>
               </Button>
               <div className="flex flex-col gap-2 border-t pt-2">
-                <Button variant="ghost" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                  {mounted && theme === "dark" ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
-                  {mounted && theme === "dark" ? "Modo claro" : "Modo oscuro"}
-                </Button>
                 <Button variant="outline" asChild>
                   <Link href="/login">Iniciar Sesión</Link>
                 </Button>
@@ -126,12 +119,32 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
           <div className="grid gap-8 md:grid-cols-4">
             <div className="md:col-span-1">
               <Link href="/" className="flex items-center gap-2">
-                <img src="/logo/logo_theme_white.svg?v=1" alt="WPFacil" className="h-6 w-auto dark:hidden" />
-                <img src="/logo/logo_theme_black.svg?v=1" alt="WPFacil" className="hidden h-6 w-auto dark:block" />
+                <img src="/logo/logo_theme_white.png?v=1" alt="WPFacil" className="h-6 w-auto dark:hidden" />
+                <img src="/logo/logo_theme_black.png?v=1" alt="WPFacil" className="hidden h-6 w-auto dark:block" />
               </Link>
               <p className="mt-3 text-sm text-muted-foreground">
                 Plataforma de hosting WordPress ultrarrápido y fácil de usar.
               </p>
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="h-8 gap-2 px-3 text-xs"
+                >
+                  {mounted && theme === "dark" ? (
+                    <>
+                      <Sun className="h-3.5 w-3.5" />
+                      <span>Modo Claro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="h-3.5 w-3.5" />
+                      <span>Modo Oscuro</span>
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
             <div>
               <h4 className="mb-3 text-sm font-semibold">Producto</h4>

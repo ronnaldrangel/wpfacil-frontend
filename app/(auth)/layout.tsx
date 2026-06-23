@@ -12,12 +12,12 @@ export default function AuthLayout({
           <div className="flex justify-center">
             <Link href="/">
               <img
-                src="/logo/logo_theme_white.svg?v=1"
+                src="/logo/logo_theme_white.png?v=1"
                 alt="WPFacil"
                 className="h-10 w-auto dark:hidden"
               />
               <img
-                src="/logo/logo_theme_black.svg?v=1"
+                src="/logo/logo_theme_black.png?v=1"
                 alt="WPFacil"
                 className="hidden h-10 w-auto dark:block"
               />

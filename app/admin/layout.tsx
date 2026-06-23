@@ -89,8 +89,8 @@ export default function AdminLayout({
       >
         <div className="flex h-14 items-center border-b px-6">
           <Link href="/admin" className="flex items-center gap-2">
-            <img src="/logo/logo_theme_white.svg?v=1" alt="Admin" className="h-8 w-auto dark:hidden" />
-            <img src="/logo/logo_theme_black.svg?v=1" alt="Admin" className="hidden h-8 w-auto dark:block" />
+            <img src="/logo/logo_theme_white.png?v=1" alt="Admin" className="h-8 w-auto dark:hidden" />
+            <img src="/logo/logo_theme_black.png?v=1" alt="Admin" className="hidden h-8 w-auto dark:block" />
           </Link>
         </div>
         <nav className="flex-1 space-y-1 p-4">
