@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { AdminDataTable } from "@/components/admin-data-table"
@@ -61,13 +61,13 @@ function ChangePlanDialog({ sub, onSave }: { sub: any; onSave: (plan: string) =>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
-          <Edit className="h-4 w-4" />
+          <Edit className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Cambiar Plan</DialogTitle>
-          <DialogDescription>Cambia el plan de suscripción para {sub.site?.name || "el sitio"}</DialogDescription>
+          <DialogDescription>Cambia el plan de suscripciÃ³n para {sub.site?.name || "el sitio"}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -123,16 +123,16 @@ function CancelSubscriptionDialog({ subId, siteName, onCancel }: { subId: string
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Cancelar Subscripción</AlertDialogTitle>
+          <AlertDialogTitle>Cancelar SubscripciÃ³n</AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro de cancelar la subscripción de {siteName}? El usuario perderá acceso al final del período actual.
+            Â¿EstÃ¡s seguro de cancelar la subscripciÃ³n de {siteName}? El usuario perderÃ¡ acceso al final del perÃ­odo actual.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleCancel} disabled={canceling}>
             {canceling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Cancelar Subscripción
+            Cancelar SubscripciÃ³n
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -171,9 +171,9 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
       await api.post("/api/admin/subscriptions", { userId, plan })
       await onCreated()
       setOpen(false)
-      toast.success("Subscripción creada")
+      toast.success("SubscripciÃ³n creada")
     } catch (err: any) {
-      toast.error(err?.message || "Error al crear subscripción")
+      toast.error(err?.message || "Error al crear subscripciÃ³n")
     } finally {
       setSaving(false)
     }
@@ -184,14 +184,14 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Crear subscripción
+          Crear subscripciÃ³n
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Crear subscripción manual</DialogTitle>
+          <DialogTitle>Crear subscripciÃ³n manual</DialogTitle>
           <DialogDescription>
-            Crea un slot de subscripción para un usuario sin pasar por Stripe. Será perpetua hasta que la canceles manualmente.
+            Crea un slot de subscripciÃ³n para un usuario sin pasar por Stripe. SerÃ¡ perpetua hasta que la canceles manualmente.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -204,7 +204,7 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
             >
               {users.map((u: any) => (
                 <option key={u.id} value={u.id}>
-                  {u.name || u.email} — {u.email}
+                  {u.name || u.email} â€” {u.email}
                 </option>
               ))}
             </select>
@@ -223,7 +223,7 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
                   <div>
                     <p className="text-sm font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"} · {p.maxStorage / 1024} GB
+                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "aÃ±o" : "mes"} Â· {p.maxStorage / 1024} GB
                     </p>
                   </div>
                   {plan === p.slug && (
@@ -267,13 +267,13 @@ export default function AdminSubscriptionsPage() {
     {
       key: "site",
       label: "Sitio",
-      render: (v: unknown) => (v as any)?.name || "—",
+      render: (v: unknown) => (v as any)?.name || "â€”",
     },
     {
       key: "user",
       label: "Usuario",
       className: "hidden md:table-cell",
-      render: (v: unknown) => (v as any)?.name || (v as any)?.email || "—",
+      render: (v: unknown) => (v as any)?.name || (v as any)?.email || "â€”",
     },
     { key: "plan", label: "Plan", className: "hidden md:table-cell", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
     {
@@ -306,7 +306,7 @@ export default function AdminSubscriptionsPage() {
     },
     {
       key: "currentPeriodEnd",
-      label: "Próximo Pago",
+      label: "PrÃ³ximo Pago",
       className: "hidden lg:table-cell",
       render: (v: unknown) =>
         v
@@ -315,7 +315,7 @@ export default function AdminSubscriptionsPage() {
               month: "short",
               year: "numeric",
             })
-          : "—",
+          : "â€”",
     },
     {
       key: "actions",
@@ -339,7 +339,7 @@ export default function AdminSubscriptionsPage() {
                 setSubscriptions(subscriptions.map((s) =>
                   s.id === row.id ? { ...s, status: "canceled" } : s
                 ))
-                toast.success("Subscripción cancelada")
+                toast.success("SubscripciÃ³n cancelada")
               } catch (err: any) {
                 toast.error(err?.message || "Error al cancelar")
               }

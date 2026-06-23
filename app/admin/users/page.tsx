@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { AdminDataTable } from "@/components/admin-data-table"
@@ -60,7 +60,7 @@ function EditUserDialog({ user, onSave }: { user: any; onSave: (data: any) => Pr
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
-          <Edit className="h-4 w-4" />
+          <Edit className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -120,7 +120,7 @@ function DeleteUserDialog({ userName, onDelete }: { userName: string; onDelete: 
         <AlertDialogHeader>
           <AlertDialogTitle>Eliminar Usuario</AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro de eliminar a {userName}? Esta acción no se puede deshacer.
+            Â¿EstÃ¡s seguro de eliminar a {userName}? Esta acciÃ³n no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -169,14 +169,14 @@ export default function AdminUsersPage() {
   }
 
   const columns = [
-    { key: "name", label: "Nombre", render: (v: unknown) => String(v || "—") },
+    { key: "name", label: "Nombre", render: (v: unknown) => String(v || "â€”") },
     { key: "email", label: "Email" },
     { key: "_count", label: "Sitios", className: "hidden md:table-cell", render: (v: unknown) => String((v as any)?.sites || 0) },
     {
       key: "isAdmin",
       label: "Admin",
       className: "hidden md:table-cell",
-      render: (v: unknown) => (v ? "Sí" : "No"),
+      render: (v: unknown) => (v ? "SÃ­" : "No"),
     },
     {
       key: "emailVerified",
@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
       render: (v: unknown, row: Record<string, unknown>) => (
         <div className="flex items-center gap-2">
           <span className={v ? "text-green-600" : "text-muted-foreground"}>
-            {v ? "Sí" : "No"}
+            {v ? "SÃ­" : "No"}
           </span>
           {!v && (
             <Button
@@ -242,7 +242,7 @@ export default function AdminUsersPage() {
             }}
           />
           <Button variant="ghost" size="icon" onClick={() => handleImpersonate(row.id as string)}>
-            <Eye className="h-4 w-4" />
+            <Eye className="size-4" />
           </Button>
         </div>
       ),

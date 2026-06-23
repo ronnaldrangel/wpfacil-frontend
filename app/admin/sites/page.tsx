@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { AdminDataTable } from "@/components/admin-data-table"
@@ -50,7 +50,7 @@ function DeleteSiteDialog({ siteName, onDelete }: { siteName: string; onDelete: 
         <AlertDialogHeader>
           <AlertDialogTitle>Eliminar Sitio</AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro de eliminar {siteName}? Esta acción no se puede deshacer y eliminará todos los datos.
+            Â¿EstÃ¡s seguro de eliminar {siteName}? Esta acciÃ³n no se puede deshacer y eliminarÃ¡ todos los datos.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -86,14 +86,14 @@ function RedeployDialog({ siteName, siteId }: { siteName: string; siteId: string
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon">
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="size-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Redeploy Sitio</DialogTitle>
           <DialogDescription>
-            ¿Re-desplegar {siteName}? Esto reiniciará el sitio con la configuración actual.
+            Â¿Re-desplegar {siteName}? Esto reiniciarÃ¡ el sitio con la configuraciÃ³n actual.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -133,7 +133,7 @@ export default function AdminSitesPage() {
       key: "user",
       label: "Usuario",
       className: "hidden md:table-cell",
-      render: (v: unknown) => (v as any)?.name || "—",
+      render: (v: unknown) => (v as any)?.name || "â€”",
     },
     {
       key: "subdomain",

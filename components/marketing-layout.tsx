@@ -74,6 +74,9 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
             {navLink("features", "Características")}
             {navLink("pricing", "Planes")}
             {navLink("why", "Por qué WPFacil")}
+            <Button variant="link" asChild className="text-sm text-muted-foreground hover:text-foreground">
+              <Link href="/contact">Contacto</Link>
+            </Button>
           </nav>
           <div className="hidden items-center gap-1 md:flex">
             <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
@@ -90,12 +93,15 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
             {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
           </Button>
         </div>
-        {menuOpen && (
+          {menuOpen && (
           <div className="border-t bg-background p-4 md:hidden">
             <nav className="flex flex-col gap-1">
               {mobileNavLink("features", "Características")}
               {mobileNavLink("pricing", "Planes")}
               {mobileNavLink("why", "Por qué WPFacil")}
+              <Button variant="ghost" asChild className="justify-start text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/contact">Contacto</Link>
+              </Button>
               <div className="flex flex-col gap-2 border-t pt-2">
                 <Button variant="ghost" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                   {mounted && theme === "dark" ? <Sun className="mr-2 size-4" /> : <Moon className="mr-2 size-4" />}
@@ -130,9 +136,21 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
             <div>
               <h4 className="mb-3 text-sm font-semibold">Producto</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>{navLink("features", "Características")}</li>
-                <li>{navLink("pricing", "Planes")}</li>
-                <li>{navLink("why", "Por qué WPFacil")}</li>
+                <li>
+                  <Link href="/#features" className="hover:text-foreground transition-colors">
+                    Características
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#pricing" className="hover:text-foreground transition-colors">
+                    Planes
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#why" className="hover:text-foreground transition-colors">
+                    Por qué WPFacil
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
@@ -161,6 +179,11 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
                 <li>
                   <Link href="/privacy" className="hover:text-foreground transition-colors">
                     Política de privacidad
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="hover:text-foreground transition-colors">
+                    Contacto
                   </Link>
                 </li>
               </ul>

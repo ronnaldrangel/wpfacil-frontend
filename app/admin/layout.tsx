@@ -24,6 +24,7 @@ import {
   X,
   LogOut,
   ChevronDown,
+  Mail,
 } from "lucide-react"
 
 const navItems = [
@@ -32,6 +33,7 @@ const navItems = [
   { href: "/admin/sites", label: "Sitios", icon: Globe },
   { href: "/admin/subscriptions", label: "Subscripciones", icon: CreditCard },
   { href: "/admin/plans", label: "Planes", icon: Settings },
+  { href: "/admin/contacts", label: "Mensajes", icon: Mail },
 ]
 
 export default function AdminLayout({
