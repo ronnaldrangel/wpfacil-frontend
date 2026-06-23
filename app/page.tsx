@@ -55,7 +55,7 @@ export default function HomePage() {
     <MarketingLayout>
       <main>
         {/* Hero */}
-        <section className="relative pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
+        <section className="relative pt-20 pb-16 md:pt-28 md:pb-20 overflow-hidden">
           <div className="mx-auto max-w-6xl px-4 text-center">
             <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">
               Crea y gestiona sitios{" "}
