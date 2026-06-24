@@ -42,7 +42,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { api } from "@/lib/api-client"
 import { Checkbox } from "@/components/ui/checkbox"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   ArrowLeft,
   ExternalLink,
@@ -58,6 +57,9 @@ import {
   Plus,
   Clock,
   Power,
+  Copy,
+  CheckCircle2,
+  Globe,
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -110,7 +112,9 @@ export default function SiteDetailPage() {
   const [addDomainOpen, setAddDomainOpen] = React.useState(false)
   const [newDomain, setNewDomain] = React.useState("")
   const [addWww, setAddWww] = React.useState(true)
-  const [primaryIsWww, setPrimaryIsWww] = React.useState(false)
+  const [domainVerified, setDomainVerified] = React.useState(false)
+  const [domainVerifying, setDomainVerifying] = React.useState(false)
+  const [domainRecords, setDomainRecords] = React.useState<string[]>([])
   const [dnsGuideDomain, setDnsGuideDomain] = React.useState<string | null>(null)
   const [wpInfo, setWpInfo] = React.useState<any>(null)
   const [loadingWpInfo, setLoadingWpInfo] = React.useState(false)
@@ -201,21 +205,42 @@ export default function SiteDetailPage() {
     }
   }
 
-  async function handleAddDomain() {
+  async function handleVerifyDomain() {
     if (!newDomain) return
-    const wwwDomain = newDomain.startsWith("www.") ? null : `www.${newDomain}`
-    const shouldAddWww = addWww && wwwDomain
+    setDomainVerifying(true)
+    setDomainVerified(false)
+    setDomainRecords([])
+    try {
+      const res = await api.get<{ verified: boolean; records: string[] }>(
+        `/api/domains/verify?domain=${encodeURIComponent(newDomain)}`,
+      )
+      setDomainVerified(res.verified)
+      setDomainRecords(res.records || [])
+      if (res.verified) {
+        toast.success("Dominio verificado correctamente")
+      } else {
+        toast.error("El dominio no apunta a WPFacil. Revisa la configuración DNS.")
+      }
+    } catch {
+      toast.error("Error al verificar el dominio")
+    } finally {
+      setDomainVerifying(false)
+    }
+  }
+
+  async function handleAddDomain() {
+    if (!newDomain || !domainVerified) return
     try {
       await api.post("/api/domains", {
         siteId: id,
         customDomain: newDomain,
-        addWww: shouldAddWww,
-        primaryIsWww: shouldAddWww ? primaryIsWww : undefined,
+        addWww,
       })
       toast.success("Dominio agregado")
       setNewDomain("")
       setAddWww(true)
-      setPrimaryIsWww(false)
+      setDomainVerified(false)
+      setDomainRecords([])
       setAddDomainOpen(false)
       fetchAll()
     } catch {
@@ -661,82 +686,135 @@ export default function SiteDetailPage() {
             <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle>Dominios configurados</CardTitle>
-                <CardDescription>Dominios gestionados por Dokploy para este sitio</CardDescription>
+                <CardDescription>Dominios gestionados por WP Facil para este sitio</CardDescription>
               </div>
-              <Dialog open={addDomainOpen} onOpenChange={setAddDomainOpen}>
+              <Dialog open={addDomainOpen} onOpenChange={(open) => {
+                setAddDomainOpen(open)
+                if (open) {
+                  setNewDomain("")
+                  setAddWww(true)
+                  setDomainVerified(false)
+                  setDomainRecords([])
+                }
+              }}>
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     Agregar dominio
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-lg">
                   <DialogHeader>
-                    <DialogTitle>Agregar nuevo dominio</DialogTitle>
+                    <DialogTitle>Dominio de otro proveedor</DialogTitle>
                     <DialogDescription>
-                      Ingresa el dominio que quieres conectar a este sitio.
+                      Necesitas acceso a la configuraci&oacute;n DNS de tu dominio para apuntarlo a este sitio.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-5 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="new-domain">Dominio</Label>
+                  <div className="space-y-6 py-4">
+                    {/* Step 1 */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">1</span>
+                        Escribe tu dominio
+                      </div>
+                      <p className="text-xs text-muted-foreground -mt-1 ml-7">
+                        No incluyas &apos;https://&apos; ni &apos;www&apos; antes del dominio. Subdominios no soportados.
+                      </p>
                       <Input
-                        id="new-domain"
                         placeholder="ejemplo.com"
                         value={newDomain}
                         onChange={(e) => {
                           setNewDomain(e.target.value)
+                          setDomainVerified(false)
+                          setDomainRecords([])
                           setAddWww(true)
-                          setPrimaryIsWww(false)
                         }}
                       />
+                      {newDomain && !newDomain.startsWith("www.") && (
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id="add-www"
+                            checked={addWww}
+                            onCheckedChange={(c) => setAddWww(c === true)}
+                          />
+                          <Label htmlFor="add-www" className="text-sm font-normal cursor-pointer">
+                            Agregar tambi&eacute;n <span className="font-mono text-xs">www.{newDomain}</span>
+                          </Label>
+                        </div>
+                      )}
                     </div>
 
-                    {newDomain && !newDomain.startsWith("www.") && (
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id="add-www"
-                          checked={addWww}
-                          onCheckedChange={(c) => {
-                            setAddWww(c === true)
-                            if (c !== true) setPrimaryIsWww(false)
-                          }}
-                        />
-                        <Label htmlFor="add-www" className="text-sm font-normal cursor-pointer">
-                          Agregar también <span className="font-mono text-xs">www.{newDomain}</span>
-                        </Label>
+                    {/* Step 2 */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">2</span>
+                        Apunta tu dominio a WPFacil
                       </div>
-                    )}
+                      <p className="text-xs text-muted-foreground -mt-1 ml-7">
+                        Crea un registro CNAME en tu DNS para apuntar tu dominio a este sitio.
+                      </p>
+                      <div className="rounded-md border bg-muted p-3 font-mono text-xs space-y-1">
+                        <div>Tipo: <span className="font-semibold">CNAME</span></div>
+                        <div>Nombre: <span className="font-semibold">@</span></div>
+                        <div>Apunta a: <span className="font-semibold">wp.wpfacil.net</span></div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          navigator.clipboard.writeText("wp.wpfacil.net")
+                          toast.success("Copiado al portapapeles")
+                        }}
+                      >
+                        <Copy className="mr-2 h-3 w-3" />
+                        Copiar
+                      </Button>
+                    </div>
 
-                    {addWww && newDomain && !newDomain.startsWith("www.") && (
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium">Dominio principal</Label>
-                        <RadioGroup
-                          value={primaryIsWww ? "www" : "bare"}
-                          onValueChange={(v) => setPrimaryIsWww(v === "www")}
-                        >
-                          <div className="flex items-center gap-2">
-                            <RadioGroupItem value="bare" id="primary-bare" />
-                            <Label htmlFor="primary-bare" className="text-sm font-normal cursor-pointer">
-                              {newDomain}
-                            </Label>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <RadioGroupItem value="www" id="primary-www" />
-                            <Label htmlFor="primary-www" className="text-sm font-normal cursor-pointer">
-                              www.{newDomain}
-                            </Label>
-                          </div>
-                        </RadioGroup>
+                    {/* Step 3 */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">3</span>
+                        Verifica y agrega
                       </div>
-                    )}
+                      <p className="text-xs text-muted-foreground -mt-1 ml-7">
+                        La propagaci&oacute;n DNS puede tardar hasta 24 horas. Verifica antes de agregar.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Button
+                          variant="outline"
+                          onClick={handleVerifyDomain}
+                          disabled={!newDomain || domainVerifying}
+                        >
+                          {domainVerifying ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <Globe className="mr-2 h-4 w-4" />
+                          )}
+                          {domainVerifying ? "Verificando..." : "Verificar dominio"}
+                        </Button>
+                        {domainVerified && (
+                          <span className="flex items-center gap-1 text-sm font-medium text-green-600">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Verificado
+                          </span>
+                        )}
+                      </div>
+                      {domainRecords.length > 0 && (
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          {domainRecords.map((r, i) => (
+                            <p key={i} className="font-mono">{r}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setAddDomainOpen(false)}>
                       Cancelar
                     </Button>
-                    <Button onClick={handleAddDomain} disabled={!newDomain}>
-                      Agregar
+                    <Button onClick={handleAddDomain} disabled={!newDomain || !domainVerified}>
+                      Agregar dominio
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -788,41 +866,41 @@ export default function SiteDetailPage() {
                                 >
                                   <Info className="h-4 w-4" />
                                 </Button>
-                                  {!isOriginalDomain && !isPrimary && dbDomain && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleSetPrimary(dbDomain.id)}
-                                    >
-                                      Establecer como principal
-                                    </Button>
-                                  )}
-                                  {!isOriginalDomain && (
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-red-500">
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent>
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>Eliminar dominio</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            ¿Estás seguro de eliminar el dominio {d.host}? Esta acción no se puede deshacer.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                          <AlertDialogAction
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                            onClick={() => handleDeleteDomain(dbDomain?.id || d.domainId || d.id)}
-                                          >
-                                            Eliminar
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  )}
+                                {!isOriginalDomain && !isPrimary && dbDomain && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleSetPrimary(dbDomain.id)}
+                                  >
+                                    Establecer como principal
+                                  </Button>
+                                )}
+                                {!isOriginalDomain && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="text-red-500">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Eliminar dominio</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          ¿Estás seguro de eliminar el dominio {d.host}? Esta acción no se puede deshacer.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          onClick={() => handleDeleteDomain(dbDomain?.id || d.domainId || d.id)}
+                                        >
+                                          Eliminar
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
                               </div>
                             </div>
                           </CardContent>
