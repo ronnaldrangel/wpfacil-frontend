@@ -3,7 +3,6 @@
 import * as React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { VideosStatusProvider } from "@/components/videos-status-provider"
 import { getToken, removeToken, api } from "@/lib/api-client"
 import { Loader2 } from "lucide-react"
 
@@ -71,9 +70,7 @@ export default function DashboardRootLayout({
 
   return (
     <DashboardLayout user={user} onLogout={handleLogout}>
-      <VideosStatusProvider>
-        {children}
-      </VideosStatusProvider>
+      {children}
     </DashboardLayout>
   )
 }

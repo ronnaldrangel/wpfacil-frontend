@@ -41,6 +41,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { api } from "@/lib/api-client"
+import { Checkbox } from "@/components/ui/checkbox"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   ArrowLeft,
   ExternalLink,
@@ -106,6 +108,8 @@ export default function SiteDetailPage() {
   const [activeTab, setActiveTab] = React.useState("overview")
   const [addDomainOpen, setAddDomainOpen] = React.useState(false)
   const [newDomain, setNewDomain] = React.useState("")
+  const [addWww, setAddWww] = React.useState(true)
+  const [primaryIsWww, setPrimaryIsWww] = React.useState(false)
   const [dnsGuideDomain, setDnsGuideDomain] = React.useState<string | null>(null)
   const [wpInfo, setWpInfo] = React.useState<any>(null)
   const [loadingWpInfo, setLoadingWpInfo] = React.useState(false)
@@ -198,10 +202,19 @@ export default function SiteDetailPage() {
 
   async function handleAddDomain() {
     if (!newDomain) return
+    const wwwDomain = newDomain.startsWith("www.") ? null : `www.${newDomain}`
+    const shouldAddWww = addWww && wwwDomain
     try {
-      await api.post("/api/domains", { siteId: id, customDomain: newDomain })
+      await api.post("/api/domains", {
+        siteId: id,
+        customDomain: newDomain,
+        addWww: shouldAddWww,
+        primaryIsWww: shouldAddWww ? primaryIsWww : undefined,
+      })
       toast.success("Dominio agregado")
       setNewDomain("")
+      setAddWww(true)
+      setPrimaryIsWww(false)
       setAddDomainOpen(false)
       fetchAll()
     } catch {
@@ -652,16 +665,59 @@ export default function SiteDetailPage() {
                       Ingresa el dominio que quieres conectar a este sitio.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-5 py-4">
                     <div className="space-y-2">
                       <Label htmlFor="new-domain">Dominio</Label>
                       <Input
                         id="new-domain"
                         placeholder="ejemplo.com"
                         value={newDomain}
-                        onChange={(e) => setNewDomain(e.target.value)}
+                        onChange={(e) => {
+                          setNewDomain(e.target.value)
+                          setAddWww(true)
+                          setPrimaryIsWww(false)
+                        }}
                       />
                     </div>
+
+                    {newDomain && !newDomain.startsWith("www.") && (
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="add-www"
+                          checked={addWww}
+                          onCheckedChange={(c) => {
+                            setAddWww(c === true)
+                            if (c !== true) setPrimaryIsWww(false)
+                          }}
+                        />
+                        <Label htmlFor="add-www" className="text-sm font-normal cursor-pointer">
+                          Agregar también <span className="font-mono text-xs">www.{newDomain}</span>
+                        </Label>
+                      </div>
+                    )}
+
+                    {addWww && newDomain && !newDomain.startsWith("www.") && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Dominio principal</Label>
+                        <RadioGroup
+                          value={primaryIsWww ? "www" : "bare"}
+                          onValueChange={(v) => setPrimaryIsWww(v === "www")}
+                        >
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value="bare" id="primary-bare" />
+                            <Label htmlFor="primary-bare" className="text-sm font-normal cursor-pointer">
+                              {newDomain}
+                            </Label>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <RadioGroupItem value="www" id="primary-www" />
+                            <Label htmlFor="primary-www" className="text-sm font-normal cursor-pointer">
+                              www.{newDomain}
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setAddDomainOpen(false)}>
@@ -720,41 +776,41 @@ export default function SiteDetailPage() {
                                 >
                                   <Info className="h-4 w-4" />
                                 </Button>
-                                {!isOriginalDomain && !isPrimary && dbDomain && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleSetPrimary(dbDomain.id)}
-                                  >
-                                    Establecer como principal
-                                  </Button>
-                                )}
-                                {!isOriginalDomain && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="text-red-500">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Eliminar dominio</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          ¿Estás seguro de eliminar el dominio {d.host}? Esta acción no se puede deshacer.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          onClick={() => handleDeleteDomain(d.domainId || d.id)}
-                                        >
-                                          Eliminar
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
+                                  {!isOriginalDomain && !isPrimary && dbDomain && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleSetPrimary(dbDomain.id)}
+                                    >
+                                      Establecer como principal
+                                    </Button>
+                                  )}
+                                  {!isOriginalDomain && (
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-red-500">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Eliminar dominio</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            ¿Estás seguro de eliminar el dominio {d.host}? Esta acción no se puede deshacer.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            onClick={() => handleDeleteDomain(dbDomain?.id || d.domainId || d.id)}
+                                          >
+                                            Eliminar
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  )}
                               </div>
                             </div>
                           </CardContent>
