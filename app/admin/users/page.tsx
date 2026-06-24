@@ -120,7 +120,7 @@ function DeleteUserDialog({ userName, onDelete }: { userName: string; onDelete: 
         <AlertDialogHeader>
           <AlertDialogTitle>Eliminar Usuario</AlertDialogTitle>
           <AlertDialogDescription>
-            Â¿EstÃ¡s seguro de eliminar a {userName}? Esta acciÃ³n no se puede deshacer.
+            ¿Estás seguro de eliminar a {userName}? Esta acción no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -169,14 +169,14 @@ export default function AdminUsersPage() {
   }
 
   const columns = [
-    { key: "name", label: "Nombre", render: (v: unknown) => String(v || "â€”") },
+    { key: "name", label: "Nombre", render: (v: unknown) => String(v || "—") },
     { key: "email", label: "Email" },
     { key: "_count", label: "Sitios", className: "hidden md:table-cell", render: (v: unknown) => String((v as any)?.sites || 0) },
     {
       key: "isAdmin",
       label: "Admin",
       className: "hidden md:table-cell",
-      render: (v: unknown) => (v ? "SÃ­" : "No"),
+      render: (v: unknown) => (v ? "Sí" : "No"),
     },
     {
       key: "emailVerified",
@@ -185,7 +185,7 @@ export default function AdminUsersPage() {
       render: (v: unknown, row: Record<string, unknown>) => (
         <div className="flex items-center gap-2">
           <span className={v ? "text-green-600" : "text-muted-foreground"}>
-            {v ? "SÃ­" : "No"}
+            {v ? "Sí" : "No"}
           </span>
           {!v && (
             <Button

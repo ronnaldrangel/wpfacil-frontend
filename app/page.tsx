@@ -57,13 +57,12 @@ export default function HomePage() {
         {/* Hero */}
         <section className="relative pt-20 pb-16 md:pt-28 md:pb-20 overflow-hidden">
           <div className="mx-auto max-w-6xl px-4 text-center">
-            <h1 className="text-3xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+            <h1 className="text-5xl font-bold tracking-tight md:text-6xl lg:text-7xl">
               Crea y gestiona sitios{" "}
-              <span className="text-primary">WordPress</span>
-              <br />
-              en segundos
+              <br className="hidden md:block" />
+              <span className="text-primary">WordPress</span> en segundos
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+            <p className="mx-auto mt-6 max-w-2xl text-muted-foreground">
               Despliega sitios WordPress ultrarrápidos con SSL automático, CDN global y panel de control intuitivo.
               Sin complicaciones técnicas.
             </p>
@@ -87,7 +86,7 @@ export default function HomePage() {
               </div>
             </div>
             <img
-              src="/hero/Fondo1.png"
+              src="/hero/cloud.png"
               alt="WPFacil Dashboard"
               className="mt-16 w-full"
             />

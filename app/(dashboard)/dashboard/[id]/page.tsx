@@ -91,6 +91,7 @@ interface Site {
   domain?: string
   plan: string
   status: string
+  pattern?: string
   createdAt: string
   dbName: string
   dbUser: string
@@ -405,8 +406,12 @@ export default function SiteDetailPage() {
         <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-primary text-2xl font-bold text-primary-foreground">
-                {site.name.charAt(0).toUpperCase()}
+              <div className="flex h-20 w-28 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-primary">
+                <img
+                  src={`/pattern/${site.pattern || "pattern-1"}.jpg`}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="min-w-0 space-y-1">
                 <a
@@ -551,7 +556,14 @@ export default function SiteDetailPage() {
               />
               <InfoRow
                 label="Status"
-                value={<SiteStatusBadge status={site.status as any} />}
+                value={
+                  <div className="flex items-center gap-2">
+                    <SiteStatusBadge status={site.status as any} />
+                    <span className="text-xs text-muted-foreground">
+                      · Próximo pago en 25 días
+                    </span>
+                  </div>
+                }
               />
               {site.autologinSecret && (
                 <InfoRow

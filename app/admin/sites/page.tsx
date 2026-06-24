@@ -50,7 +50,7 @@ function DeleteSiteDialog({ siteName, onDelete }: { siteName: string; onDelete: 
         <AlertDialogHeader>
           <AlertDialogTitle>Eliminar Sitio</AlertDialogTitle>
           <AlertDialogDescription>
-            Â¿EstÃ¡s seguro de eliminar {siteName}? Esta acciÃ³n no se puede deshacer y eliminarÃ¡ todos los datos.
+            ¿Estás seguro de eliminar {siteName}? Esta acción no se puede deshacer y eliminará todos los datos.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -93,7 +93,7 @@ function RedeployDialog({ siteName, siteId }: { siteName: string; siteId: string
         <DialogHeader>
           <DialogTitle>Redeploy Sitio</DialogTitle>
           <DialogDescription>
-            Â¿Re-desplegar {siteName}? Esto reiniciarÃ¡ el sitio con la configuraciÃ³n actual.
+            ¿Re-desplegar {siteName}? Esto reiniciará el sitio con la configuración actual.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -133,7 +133,7 @@ export default function AdminSitesPage() {
       key: "user",
       label: "Usuario",
       className: "hidden md:table-cell",
-      render: (v: unknown) => (v as any)?.name || "â€”",
+      render: (v: unknown) => (v as any)?.name || "—",
     },
     {
       key: "subdomain",

@@ -21,6 +21,7 @@ interface Site {
   domain?: string
   plan: string
   status: "provisioning" | "deploying" | "active" | "stopped" | "error"
+  pattern?: string
   createdAt: string
 }
 

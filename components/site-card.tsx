@@ -38,6 +38,7 @@ interface Site {
   domain?: string
   plan: string
   status: "provisioning" | "deploying" | "active" | "stopped" | "error" | "suspended"
+  pattern?: string
   createdAt: string
   subscription?: {
     status: string
@@ -136,8 +137,12 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-start gap-4">
-            <div className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-md bg-muted text-xl font-bold text-muted-foreground sm:flex sm:h-14 sm:w-14">
-              {site.name.charAt(0).toUpperCase()}
+            <div className="hidden h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted sm:flex sm:h-16 sm:w-28">
+              <img
+                src={`/pattern/${site.pattern || "pattern-1"}.jpg`}
+                alt=""
+                className="h-full w-full object-cover"
+              />
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <a
@@ -178,17 +183,16 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
                   <ActionsMenu variant="mobile" />
                 </div>
               </div>
-              <SiteStatusBadge status={site.status} />
+              <div className="flex items-center gap-2">
+                <SiteStatusBadge status={site.status} />
+                <span className="text-xs text-muted-foreground">
+                  · Próximo pago en 25 días
+                </span>
+              </div>
               {site.subscription?.status === "grace" && site.subscription.daysUntilDeletion != null && (
                 <div className="flex items-center gap-1.5 text-xs font-medium text-red-600">
                   <AlertTriangle className="size-3.5" />
                   Pago vencido. Se eliminará en {site.subscription.daysUntilDeletion} días.
-                </div>
-              )}
-              {site.subscription?.status === "active" && site.subscription.daysUntilPayment != null && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="size-3.5" />
-                  Próximo pago en {site.subscription.daysUntilPayment} días
                 </div>
               )}
             </div>

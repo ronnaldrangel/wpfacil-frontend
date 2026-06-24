@@ -70,20 +70,21 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
             <img src="/logo/logo_theme_white.png?v=1" alt="WPFacil" className="h-8 w-auto dark:hidden" />
             <img src="/logo/logo_theme_black.png?v=1" alt="WPFacil" className="hidden h-8 w-auto dark:block" />
           </Link>
-          <nav className="hidden items-center gap-2 md:flex">
-            {navLink("features", "Características")}
-            {navLink("pricing", "Planes")}
-            {navLink("why", "Por qué WPFacil")}
-            <Button variant="link" asChild className="text-sm text-muted-foreground hover:text-foreground">
+          <div className="hidden items-center gap-1 md:flex">
+            {isHome ? (
+              <Button variant="ghost" onClick={() => scrollTo("pricing")} className="text-sm text-muted-foreground hover:text-foreground">
+                Precios
+              </Button>
+            ) : (
+              <Button variant="ghost" asChild className="text-sm text-muted-foreground hover:text-foreground">
+                <Link href="/#pricing">Precios</Link>
+              </Button>
+            )}
+            <Button variant="ghost" asChild className="text-sm text-muted-foreground hover:text-foreground">
               <Link href="/contact">Contacto</Link>
             </Button>
-          </nav>
-          <div className="hidden items-center gap-1 md:flex">
             <Button variant="ghost" asChild>
-              <Link href="/login">Iniciar Sesión</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/register">Comenzar ahora</Link>
+              <Link href="/login">Ingresar</Link>
             </Button>
           </div>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
@@ -93,18 +94,21 @@ export function MarketingLayout({ children }: { children: React.ReactNode }) {
           {menuOpen && (
           <div className="border-t bg-background p-4 md:hidden">
             <nav className="flex flex-col gap-1">
-              {mobileNavLink("features", "Características")}
-              {mobileNavLink("pricing", "Planes")}
-              {mobileNavLink("why", "Por qué WPFacil")}
+              {isHome ? (
+                <Button variant="ghost" onClick={() => scrollTo("pricing")} className="justify-start text-sm text-muted-foreground hover:text-foreground">
+                  Precios
+                </Button>
+              ) : (
+                <Button variant="ghost" asChild className="justify-start text-sm text-muted-foreground hover:text-foreground">
+                  <Link href="/#pricing">Precios</Link>
+                </Button>
+              )}
               <Button variant="ghost" asChild className="justify-start text-sm text-muted-foreground hover:text-foreground">
                 <Link href="/contact">Contacto</Link>
               </Button>
               <div className="flex flex-col gap-2 border-t pt-2">
                 <Button variant="outline" asChild>
-                  <Link href="/login">Iniciar Sesión</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/register">Comenzar ahora</Link>
+                  <Link href="/login">Ingresar</Link>
                 </Button>
               </div>
             </nav>

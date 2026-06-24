@@ -121,7 +121,7 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
                 onChange={(e) => setForm({ ...form, group: e.target.value })}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="basic">BÃ¡sico</option>
+                <option value="basic">Básico</option>
                 <option value="pro">Pro</option>
                 <option value="enterprise">Enterprise</option>
               </select>
@@ -146,14 +146,14 @@ function EditPlanDialog({ plan, onSave }: { plan: any; onSave: (data: any) => Pr
           <div className="space-y-2">
             <Label htmlFor="plan-priceId">Stripe Price ID</Label>
             <Input id="plan-priceId" placeholder="price_..." value={form.priceId} onChange={(e) => setForm({ ...form, priceId: e.target.value })} />
-            <p className="text-xs text-muted-foreground">Crea el producto y precio en Stripe y pega el Price ID aquÃ­</p>
+            <p className="text-xs text-muted-foreground">Crea el producto y precio en Stripe y pega el Price ID aquí</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="plan-storage">Almacenamiento (GB)</Label>
             <Input id="plan-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="plan-features">Features (una por lÃ­nea)</Label>
+            <Label htmlFor="plan-features">Features (una por línea)</Label>
             <textarea
               id="plan-features"
               value={form.features}
@@ -246,7 +246,7 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Crear Nuevo Plan</DialogTitle>
-          <DialogDescription>Crea un plan de suscripciÃ³n en Stripe y luego ingresa los datos aquÃ­</DialogDescription>
+          <DialogDescription>Crea un plan de suscripción en Stripe y luego ingresa los datos aquí</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
@@ -272,7 +272,7 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
                 onChange={(e) => setForm({ ...form, group: e.target.value })}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="basic">BÃ¡sico</option>
+                <option value="basic">Básico</option>
                 <option value="pro">Pro</option>
                 <option value="enterprise">Enterprise</option>
               </select>
@@ -297,14 +297,14 @@ function CreatePlanDialog({ onCreated }: { onCreated: () => void }) {
           <div className="space-y-2">
             <Label htmlFor="create-priceId">Stripe Price ID</Label>
             <Input id="create-priceId" placeholder="price_..." value={form.priceId} onChange={(e) => setForm({ ...form, priceId: e.target.value })} />
-            <p className="text-xs text-muted-foreground">Crea el producto y precio en Stripe y pega el Price ID aquÃ­</p>
+            <p className="text-xs text-muted-foreground">Crea el producto y precio en Stripe y pega el Price ID aquí</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="create-storage">Almacenamiento (GB)</Label>
             <Input id="create-storage" type="number" value={form.maxStorage} onChange={(e) => setForm({ ...form, maxStorage: parseInt(e.target.value) || 0 })} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="create-features">Features (una por lÃ­nea)</Label>
+            <Label htmlFor="create-features">Features (una por línea)</Label>
             <textarea
               id="create-features"
               value={form.features}
@@ -396,7 +396,7 @@ export default function AdminPlansPage() {
       key: "priceId",
       label: "Stripe Price ID",
       className: "hidden lg:table-cell",
-      render: (v: unknown) => (v ? String(v) : "â€”"),
+      render: (v: unknown) => (v ? String(v) : "—"),
     },
     {
       key: "maxStorage",
@@ -409,7 +409,7 @@ export default function AdminPlansPage() {
       label: "Activo",
       render: (v: unknown) => (
         <Badge variant={v ? "default" : "secondary"}>
-          {v ? "SÃ­" : "No"}
+          {v ? "Sí" : "No"}
         </Badge>
       ),
     },
@@ -434,9 +434,9 @@ export default function AdminPlansPage() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Eliminar Plan</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Â¿EstÃ¡s seguro de eliminar el plan <strong>{(row as any).name}</strong>?
-                  {(row as any).priceId && " TambiÃ©n se archivarÃ¡ el producto asociado en Stripe."}
-                  Esta acciÃ³n no se puede deshacer.
+                  ¿Estás seguro de eliminar el plan <strong>{(row as any).name}</strong>?
+                  {(row as any).priceId && " También se archivará el producto asociado en Stripe."}
+                  Esta acción no se puede deshacer.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -470,7 +470,7 @@ export default function AdminPlansPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <PageHeader title="Planes" description="Gestiona los planes de suscripciÃ³n" />
+        <PageHeader title="Planes" description="Gestiona los planes de suscripción" />
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button variant="outline" onClick={handlePreload} disabled={preloading}>
             {preloading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
