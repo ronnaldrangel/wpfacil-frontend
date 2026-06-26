@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PasswordInput } from "@/components/ui/password-input"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
+import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { SiteStatusBadge } from "@/components/site-status-badge"
 import { PageLoader } from "@/components/page-loader"
@@ -117,6 +120,10 @@ export default function SiteDetailPage() {
   const [dnsGuideDomain, setDnsGuideDomain] = React.useState<string | null>(null)
   const [wpInfo, setWpInfo] = React.useState<any>(null)
   const [loadingWpInfo, setLoadingWpInfo] = React.useState(false)
+  const [analyticsData, setAnalyticsData] = React.useState<any[]>([])
+  const [analyticsTotal, setAnalyticsTotal] = React.useState(0)
+  const [timeRange, setTimeRange] = React.useState("7")
+  const [loadingAnalytics, setLoadingAnalytics] = React.useState(false)
   const [dbDomains, setDbDomains] = React.useState<any[]>([])
   const [fbOpening, setFbOpening] = React.useState(false)
 
@@ -139,6 +146,22 @@ export default function SiteDetailPage() {
   }
 
   React.useEffect(() => { fetchAll(); fetchWordPressInfo() }, [id])
+
+  async function fetchAnalytics(range: string) {
+    setLoadingAnalytics(true)
+    try {
+      const res = await api.get<{ data: any[]; total: number }>(`/api/sites/${id}/analytics?range=${range}`)
+      setAnalyticsData(res.data || [])
+      setAnalyticsTotal(res.total || 0)
+    } catch {
+      setAnalyticsData([])
+      setAnalyticsTotal(0)
+    } finally {
+      setLoadingAnalytics(false)
+    }
+  }
+
+  React.useEffect(() => { fetchAnalytics(timeRange) }, [id, timeRange])
 
   async function fetchWordPressInfo() {
     setLoadingWpInfo(true)
@@ -549,6 +572,58 @@ export default function SiteDetailPage() {
         </TabsContent>
 
         <TabsContent value="wordpress" className="space-y-6">
+          <Card>
+            <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
+              <div className="grid flex-1 gap-1">
+                <CardTitle>Visitas</CardTitle>
+                <CardDescription>Visitas diarias al sitio</CardDescription>
+              </div>
+              <Select value={timeRange} onValueChange={setTimeRange}>
+                <SelectTrigger className="w-[160px] rounded-lg">
+                  <SelectValue placeholder="Últimos 7 días" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Hoy</SelectItem>
+                  <SelectItem value="7">Últimos 7 días</SelectItem>
+                  <SelectItem value="15">Últimos 15 días</SelectItem>
+                  <SelectItem value="30">Últimos 30 días</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardHeader>
+            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+              {loadingAnalytics ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : analyticsData.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No hay datos de visitas para este período.
+                </div>
+              ) : (
+                <ChartContainer
+                  config={{ visits: { label: "Visitas", color: "var(--chart-1)" } }}
+                  className="aspect-auto h-[250px] w-full"
+                >
+                  <AreaChart data={analyticsData}>
+                    <defs>
+                      <linearGradient id="fillVisits" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-visits)" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="var(--color-visits)" stopOpacity={0.1} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8}
+                      tickFormatter={(v: string) => { const d = new Date(v); return d.toLocaleDateString("es-ES", { month: "short", day: "numeric" }) }} />
+                    <ChartTooltip cursor={false}
+                      content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Area dataKey="visits" type="natural" fill="url(#fillVisits)" stroke="var(--color-visits)" />
+                  </AreaChart>
+                </ChartContainer>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Estado de WordPress</CardTitle>
