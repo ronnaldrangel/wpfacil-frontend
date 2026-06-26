@@ -161,8 +161,8 @@ function CreateSiteContent() {
       toast.error("Plan no encontrado")
       return
     }
-    if (!slotId && !plan.priceId) {
-      toast.error("Este plan no tiene un precio configurado en Stripe")
+    if (!slotId && !plan.monthlyPriceId && !plan.annualPriceId) {
+      toast.error("Este plan no tiene precios configurados en Stripe")
       return
     }
     setLoading(true)
@@ -192,6 +192,7 @@ function CreateSiteContent() {
       sessionStorage.setItem("wpfacil_create_wpAdminPassword", form.wpAdminPassword)
       const res = await api.post<{ url: string }>("/api/stripe/checkout", {
         planId: plan.id,
+        period,
       })
       window.location.href = res.url
     } catch (err: any) {
@@ -200,27 +201,16 @@ function CreateSiteContent() {
     }
   }
 
-  const groupedPlans = React.useMemo(() => {
-    const groups: Record<string, any[]> = {}
-    for (const plan of plans) {
-      if (plan.period !== period) continue
-      if (!groups[plan.group]) groups[plan.group] = []
-      groups[plan.group].push(plan)
-    }
-    const order = ["basic", "pro", "enterprise"]
-    return order
-      .map((key) => ({ group: key, plans: groups[key] || [] }))
-      .filter((g) => g.plans.length > 0)
-  }, [plans, period])
+  const sortedPlans = React.useMemo(() => {
+    return [...plans].sort((a, b) => Number(a.monthlyPrice) - Number(b.monthlyPrice))
+  }, [plans])
 
   React.useEffect(() => {
     if (slotPlan) return
-    const current = plans.find((p) => p.slug === selectedPlan)
-    if (!current || current.period !== period) {
-      const first = plans.find((p) => p.period === period)
-      if (first) setSelectedPlan(first.slug)
+    if (!selectedPlan || !plans.find((p) => p.slug === selectedPlan)) {
+      if (plans.length > 0) setSelectedPlan(plans[0].slug)
     }
-  }, [period, plans, selectedPlan, slotPlan])
+  }, [plans, selectedPlan, slotPlan])
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -548,8 +538,9 @@ function CreateSiteContent() {
                   </div>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {groupedPlans.map(({ group, plans: groupPlans }) =>
-                      groupPlans.map((plan) => (
+                    {sortedPlans.map((plan) => {
+                      const price = period === "monthly" ? plan.monthlyPrice : plan.annualPrice
+                      return (
                         <button
                           type="button"
                           key={plan.slug}
@@ -567,7 +558,7 @@ function CreateSiteContent() {
                               <div>
                                 <h3 className="font-semibold">{plan.name}</h3>
                                 <p className="text-xs text-muted-foreground capitalize">
-                                  {group} · {period === "monthly" ? "mensual" : "anual"}
+                                  {period === "monthly" ? "mensual" : "anual"}
                                 </p>
                               </div>
                               {selectedPlan === plan.slug && (
@@ -578,7 +569,7 @@ function CreateSiteContent() {
                             </div>
                             <div>
                               <span className="text-2xl font-bold">
-                                ${Number(plan.price).toFixed(2)}
+                                ${Number(price).toFixed(2)}
                               </span>
                               <span className="text-sm text-muted-foreground">
                                 /{period === "monthly" ? "mes" : "año"}
@@ -606,8 +597,8 @@ function CreateSiteContent() {
                             </ul>
                           </div>
                         </button>
-                      ))
-                    )}
+                      )
+                    })}
                   </div>
                 )}
               </div>

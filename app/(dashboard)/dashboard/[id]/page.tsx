@@ -153,13 +153,18 @@ export default function SiteDetailPage() {
   }
 
   async function handleAction(action: string) {
+    const statusMap: Record<string, string> = { start: "active", stop: "stopped", redeploy: "deploying" }
+    if (statusMap[action] && site) {
+      setSite({ ...site, status: statusMap[action] })
+    }
     try {
       const res = await api.post<{ message: string }>(`/api/sites/${id}/${action}`)
       toast.success(res.message)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || `Error al ejecutar ${action}`)
       fetchAll()
-    } catch {
-      toast.error(`Error al ejecutar ${action}`)
     }
+    fetchAll()
   }
 
   async function handleVerifyDomain() {
@@ -226,13 +231,13 @@ export default function SiteDetailPage() {
   }
 
   async function handleDelete() {
+    router.push("/dashboard")
+    addNotification(`Sitio "${site?.name}" eliminado`)
     try {
       await api.delete(`/api/sites/${id}`)
-      addNotification(`Sitio "${site?.name}" eliminado`)
       toast.success("Sitio eliminado")
-      router.push("/dashboard")
     } catch {
-      toast.error("Error al eliminar el sitio")
+      toast.error("Error al eliminar el sitio. Se reintentará en segundo plano.")
     }
   }
 
@@ -491,9 +496,15 @@ export default function SiteDetailPage() {
                 value={
                   <div className="flex items-center gap-2">
                     <SiteStatusBadge status={site.status as any} />
-                    <span className="text-xs text-muted-foreground">
-                      · Próximo pago en 25 días
-                    </span>
+                    {stats?.subscription?.currentPeriodEnd ? (
+                      <span className="text-xs text-muted-foreground">
+                        · Expira el {new Date(stats.subscription.currentPeriodEnd).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        · Expira: —
+                      </span>
+                    )}
                   </div>
                 }
               />

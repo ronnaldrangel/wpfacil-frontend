@@ -146,7 +146,7 @@ export default function BillingPage() {
                       <span className="font-medium capitalize">{sub.plan}</span>
                     </div>
                     <div className="text-sm">
-                      <span className="text-muted-foreground">Próximo pago:</span>{" "}
+                      <span className="text-muted-foreground">Expira:</span>{" "}
                       <span className="font-medium">{formatDate(sub.currentPeriodEnd)}</span>
                     </div>
                     <Badge variant={sub.status === "active" ? "default" : "secondary"}>

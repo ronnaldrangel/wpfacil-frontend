@@ -187,10 +187,10 @@ export default function HomePage() {
             ) : (
               <div className="mt-8 grid gap-6 md:grid-cols-3">
                 {plans
-                  .filter((plan) => plan.period === period)
-                  .sort((a, b) => Number(a.price) - Number(b.price))
+                  .sort((a, b) => Number(a.monthlyPrice) - Number(b.monthlyPrice))
                   .map((plan) => {
-                    const isPopular = plan.group === "pro"
+                    const price = period === "monthly" ? plan.monthlyPrice : plan.annualPrice
+                    const isPopular = plan.slug === "pro"
                     return (
                       <Card key={plan.slug} className={isPopular ? "relative border-primary shadow-lg overflow-visible" : ""}>
                         {isPopular && (
@@ -198,8 +198,11 @@ export default function HomePage() {
                         )}
                         <CardHeader className="text-center pb-0">
                           <CardTitle className="text-xl">{plan.name}</CardTitle>
+                          {plan.description && (
+                            <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+                          )}
                           <p className="mt-4">
-                            <span className="text-4xl font-bold">${Number(plan.price).toFixed(2)}</span>
+                            <span className="text-4xl font-bold">${Number(price).toFixed(2)}</span>
                             <span className="text-sm text-muted-foreground">/{period === "monthly" ? "mes" : "año"}</span>
                           </p>
                         </CardHeader>

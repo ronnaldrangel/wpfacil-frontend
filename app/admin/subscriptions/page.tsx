@@ -4,6 +4,7 @@ import * as React from "react"
 import { AdminDataTable } from "@/components/admin-data-table"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import {
   Dialog,
   DialogContent,
@@ -24,32 +25,41 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Edit, XCircle, Loader2, Plus } from "lucide-react"
+import { Edit, XCircle, Loader2, Plus, Trash2, RotateCcw } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/page-header"
 import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
 
-function ChangePlanDialog({ sub, onSave }: { sub: any; onSave: (plan: string) => Promise<void> }) {
+function EditSubscriptionDialog({ sub, onSave }: { sub: any; onSave: () => Promise<void> }) {
   const [open, setOpen] = React.useState(false)
   const [saving, setSaving] = React.useState(false)
   const [plan, setPlan] = React.useState(sub.plan)
   const [plans, setPlans] = React.useState<any[]>([])
+  const [expirationDate, setExpirationDate] = React.useState(
+    sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toISOString().split("T")[0] : "",
+  )
 
   React.useEffect(() => {
     if (open) {
       api.get<any[]>("/api/admin/plans").then(setPlans).catch(() => {})
+      setPlan(sub.plan)
+      setExpirationDate(sub.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toISOString().split("T")[0] : "")
     }
-  }, [open])
+  }, [open, sub])
 
   async function handleSave() {
     setSaving(true)
     try {
-      await api.patch(`/api/admin/subscriptions/${sub.id}`, { plan })
-      onSave(plan)
+      const payload: any = { plan }
+      if (sub.source === "manual") {
+        payload.currentPeriodEnd = expirationDate ? new Date(expirationDate).toISOString() : null
+      }
+      await api.patch(`/api/admin/subscriptions/${sub.id}`, payload)
+      await onSave()
       setOpen(false)
-      toast.success("Plan actualizado")
+      toast.success("Subscripción actualizada")
     } catch (err: any) {
       toast.error(err?.message || "Error al actualizar")
     } finally {
@@ -66,13 +76,15 @@ function ChangePlanDialog({ sub, onSave }: { sub: any; onSave: (plan: string) =>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cambiar Plan</DialogTitle>
-          <DialogDescription>Cambia el plan de suscripción para {sub.site?.name || "el sitio"}</DialogDescription>
+          <DialogTitle>Editar Subscripción</DialogTitle>
+          <DialogDescription>
+            {sub.site?.name ? `Sitio: ${sub.site.name}` : "Slot sin sitio asignado"}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Nuevo plan</Label>
-            <div className="grid gap-2">
+            <Label>Plan</Label>
+            <div className="grid gap-2 max-h-60 overflow-y-auto">
               {plans.map((p: any) => (
                 <div
                   key={p.id}
@@ -83,14 +95,33 @@ function ChangePlanDialog({ sub, onSave }: { sub: any; onSave: (plan: string) =>
                 >
                   <div>
                     <p className="text-sm font-medium">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">${Number(p.price).toFixed(2)}/mes</p>
+                    <p className="text-xs text-muted-foreground">
+                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"}
+                    </p>
                   </div>
-                  {plan === p.slug && (
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                  )}
+                  {plan === p.slug && <div className="h-2 w-2 rounded-full bg-primary" />}
                 </div>
               ))}
             </div>
+          </div>
+
+          {sub.source === "manual" && (
+            <div className="space-y-2">
+              <Label>Fecha de expiración (opcional)</Label>
+              <Input
+                type="date"
+                value={expirationDate}
+                onChange={(e) => setExpirationDate(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Si no pones fecha, la subscripción será perpetua hasta que la canceles manualmente.
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Badge variant="outline">{sub.source === "manual" ? "Manual" : "Stripe"}</Badge>
+            <span>Estado: <Badge variant={sub.status === "active" ? "default" : "destructive"}>{sub.status}</Badge></span>
           </div>
         </div>
         <DialogFooter>
@@ -125,7 +156,7 @@ function CancelSubscriptionDialog({ subId, siteName, onCancel }: { subId: string
         <AlertDialogHeader>
           <AlertDialogTitle>Cancelar Subscripción</AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro de cancelar la subscripción de {siteName}? El usuario perderá acceso al final del período actual.
+            ¿Estás seguro de cancelar la subscripción de {siteName}? El usuario perderá acceso.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -140,6 +171,94 @@ function CancelSubscriptionDialog({ subId, siteName, onCancel }: { subId: string
   )
 }
 
+function ReactivateSubscriptionDialog({ subId, onReactivate }: { subId: string; onReactivate: () => Promise<void> }) {
+  const [open, setOpen] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
+  const [expirationDate, setExpirationDate] = React.useState("")
+
+  async function handleReactivate() {
+    setSaving(true)
+    try {
+      const payload: any = {}
+      if (expirationDate) payload.currentPeriodEnd = new Date(expirationDate).toISOString()
+      await api.post(`/api/admin/subscriptions/${subId}/reactivate`, payload)
+      await onReactivate()
+      setOpen(false)
+      toast.success("Subscripción reactivada")
+    } catch (err: any) {
+      toast.error(err?.message || "Error al reactivar")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <RotateCcw className="h-4 w-4 text-green-500" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reactivar Subscripción</DialogTitle>
+          <DialogDescription>La subscripción volverá a estar activa y el sitio se reanudará.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Nueva fecha de expiración (opcional)</Label>
+            <Input type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} />
+            <p className="text-xs text-muted-foreground">Si no pones fecha, será perpetua.</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
+          <Button onClick={handleReactivate} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Reactivar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function DeleteSubscriptionDialog({ subId, siteName, onDelete }: { subId: string; siteName: string; onDelete: () => Promise<void> }) {
+  const [deleting, setDeleting] = React.useState(false)
+
+  async function handleDelete() {
+    setDeleting(true)
+    await onDelete()
+    setDeleting(false)
+  }
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Trash2 className="h-4 w-4 text-destructive" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar Subscripción</AlertDialogTitle>
+          <AlertDialogDescription>
+            ¿Estás seguro de eliminar completamente la subscripción de {siteName}?
+            Esta acción no se puede deshacer y eliminará todos los registros.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleDelete} disabled={deleting}>
+            {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Eliminar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}
+
 function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void> }) {
   const [open, setOpen] = React.useState(false)
   const [saving, setSaving] = React.useState(false)
@@ -147,6 +266,7 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
   const [plans, setPlans] = React.useState<any[]>([])
   const [userId, setUserId] = React.useState("")
   const [plan, setPlan] = React.useState("")
+  const [expirationDate, setExpirationDate] = React.useState("")
 
   React.useEffect(() => {
     if (open) {
@@ -168,10 +288,12 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
     if (!userId || !plan) return
     setSaving(true)
     try {
-      await api.post("/api/admin/subscriptions", { userId, plan })
+      const payload: any = { userId, plan }
+      if (expirationDate) payload.currentPeriodEnd = new Date(expirationDate).toISOString()
+      await api.post("/api/admin/subscriptions", payload)
       await onCreated()
       setOpen(false)
-      toast.success("Subscripción creada")
+      toast.success("Subscripción manual creada")
     } catch (err: any) {
       toast.error(err?.message || "Error al crear subscripción")
     } finally {
@@ -191,7 +313,7 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
         <DialogHeader>
           <DialogTitle>Crear subscripción manual</DialogTitle>
           <DialogDescription>
-            Crea un slot de subscripción para un usuario sin pasar por Stripe. Será perpetua hasta que la canceles manualmente.
+            Crea un slot de subscripción para un usuario. Opcionalmente puedes asignar una fecha de expiración.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
@@ -223,15 +345,24 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
                   <div>
                     <p className="text-sm font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"} · {p.maxStorage / 1024} GB
+                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"} · {Math.round(p.maxStorage / 1024)} GB
                     </p>
                   </div>
-                  {plan === p.slug && (
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                  )}
+                  {plan === p.slug && <div className="h-2 w-2 rounded-full bg-primary" />}
                 </div>
               ))}
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Fecha de expiración (opcional)</Label>
+            <Input
+              type="date"
+              value={expirationDate}
+              onChange={(e) => setExpirationDate(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Si no pones fecha, la subscripción será perpetua hasta que la canceles manualmente.
+            </p>
           </div>
         </div>
         <DialogFooter>
@@ -275,7 +406,12 @@ export default function AdminSubscriptionsPage() {
       className: "hidden md:table-cell",
       render: (v: unknown) => (v as any)?.name || (v as any)?.email || "—",
     },
-    { key: "plan", label: "Plan", className: "hidden md:table-cell", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
+    {
+      key: "plan",
+      label: "Plan",
+      className: "hidden md:table-cell",
+      render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1),
+    },
     {
       key: "source",
       label: "Origen",
@@ -291,62 +427,67 @@ export default function AdminSubscriptionsPage() {
       key: "status",
       label: "Estado",
       render: (value: unknown) => (
-        <Badge
-          variant={
-            value === "active"
-              ? "default"
-              : value === "canceled"
-              ? "destructive"
-              : "secondary"
-          }
-        >
-          {value === "active" ? "Activa" : value === "canceled" ? "Cancelada" : String(value)}
+        <Badge variant={value === "active" ? "default" : value === "canceled" ? "destructive" : "secondary"}>
+          {value === "active" ? "Activa" : value === "canceled" ? "Cancelada" : value === "expired" ? "Expirada" : String(value)}
         </Badge>
       ),
     },
     {
       key: "currentPeriodEnd",
-      label: "Próximo Pago",
+      label: "Expira",
       className: "hidden lg:table-cell",
-      render: (v: unknown) =>
-        v
-          ? new Date(v as string).toLocaleDateString("es-ES", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })
-          : "—",
+      render: (v: unknown, row: Record<string, unknown>) => {
+        const r = row as any
+        if (!v && r.source === "manual") return <span className="text-muted-foreground">— (perpetua)</span>
+        return v
+          ? new Date(v as string).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })
+          : "—"
+      },
     },
     {
       key: "actions",
       label: "Acciones",
-      render: (_: unknown, row: Record<string, unknown>) => (
-        <div className="flex items-center gap-1">
-          <ChangePlanDialog
-            sub={row}
-            onSave={async (plan) => {
-              setSubscriptions(subscriptions.map((s) =>
-                s.id === row.id ? { ...s, plan } : s
-              ))
-            }}
-          />
-          <CancelSubscriptionDialog
-            subId={row.id as string}
-            siteName={(row as any).site?.name || ""}
-            onCancel={async () => {
-              try {
-                await api.patch(`/api/admin/subscriptions/${row.id}`, { status: "canceled" })
-                setSubscriptions(subscriptions.map((s) =>
-                  s.id === row.id ? { ...s, status: "canceled" } : s
-                ))
-                toast.success("Subscripción cancelada")
-              } catch (err: any) {
-                toast.error(err?.message || "Error al cancelar")
-              }
-            }}
-          />
-        </div>
-      ),
+      render: (_: unknown, row: Record<string, unknown>) => {
+        const r = row as any
+        const isManual = r.source === "manual"
+        const isActive = r.status === "active"
+        return (
+          <div className="flex items-center gap-1">
+            <EditSubscriptionDialog sub={row} onSave={fetchSubscriptions} />
+            {isManual && !isActive && (
+              <ReactivateSubscriptionDialog subId={r.id} onReactivate={fetchSubscriptions} />
+            )}
+            {isActive && (
+              <CancelSubscriptionDialog
+                subId={r.id}
+                siteName={r.site?.name || ""}
+                onCancel={async () => {
+                  try {
+                    await api.patch(`/api/admin/subscriptions/${r.id}`, { status: "canceled" })
+                    await fetchSubscriptions()
+                    toast.success("Subscripción cancelada")
+                  } catch (err: any) {
+                    toast.error(err?.message || "Error al cancelar")
+                  }
+                }}
+              />
+            )}
+            <DeleteSubscriptionDialog
+              subId={r.id}
+              siteName={r.site?.name || ""}
+              onDelete={async () => {
+                try {
+                  await api.delete(`/api/admin/subscriptions/${r.id}`)
+                  await fetchSubscriptions()
+                  toast.success("Subscripción eliminada")
+                } catch (err: any) {
+                  toast.error(err?.message || "Error al eliminar")
+                }
+              }}
+            />
+          </div>
+        )
+      },
     },
   ]
 

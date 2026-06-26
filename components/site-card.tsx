@@ -42,6 +42,7 @@ interface Site {
   createdAt: string
   subscription?: {
     status: string
+    currentPeriodEnd: string | null
     daysUntilPayment: number | null
     daysUntilDeletion: number | null
   } | null
@@ -185,9 +186,15 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
               </div>
               <div className="flex items-center gap-2">
                 <SiteStatusBadge status={site.status} />
-                <span className="text-xs text-muted-foreground">
-                  · Próximo pago en 25 días
-                </span>
+                {site.subscription?.currentPeriodEnd ? (
+                  <span className="text-xs text-muted-foreground">
+                    · Expira el {new Date(site.subscription.currentPeriodEnd).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
+                  </span>
+                ) : site.subscription && (
+                  <span className="text-xs text-muted-foreground">
+                    · Expira: —
+                  </span>
+                )}
               </div>
               {site.subscription?.status === "grace" && site.subscription.daysUntilDeletion != null && (
                 <div className="flex items-center gap-1.5 text-xs font-medium text-red-600">
