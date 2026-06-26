@@ -55,8 +55,7 @@ import {
   Loader2,
   Info,
   Plus,
-  Clock,
-  Power,
+
   Copy,
   CheckCircle2,
   Globe,
@@ -119,12 +118,7 @@ export default function SiteDetailPage() {
   const [wpInfo, setWpInfo] = React.useState<any>(null)
   const [loadingWpInfo, setLoadingWpInfo] = React.useState(false)
   const [dbDomains, setDbDomains] = React.useState<any[]>([])
-  const [fbStatus, setFbStatus] = React.useState<"active" | "stopped">("stopped")
-  const [fbActiveUntil, setFbActiveUntil] = React.useState<string | null>(null)
-  const [fbDuration, setFbDuration] = React.useState<number>(15)
-  const [fbActivating, setFbActivating] = React.useState(false)
-  const [fbDeactivating, setFbDeactivating] = React.useState(false)
-  const [fbRemainingMs, setFbRemainingMs] = React.useState(0)
+  const [fbOpening, setFbOpening] = React.useState(false)
 
   async function fetchAll() {
     try {
@@ -145,43 +139,6 @@ export default function SiteDetailPage() {
   }
 
   React.useEffect(() => { fetchAll(); fetchWordPressInfo() }, [id])
-
-  React.useEffect(() => {
-    fetchFilebrowserStatus()
-    const interval = setInterval(fetchFilebrowserStatus, 30000)
-    return () => clearInterval(interval)
-  }, [id])
-
-  async function fetchFilebrowserStatus() {
-    try {
-      const res = await api.get<{ status: "active" | "stopped"; activeUntil: string | null; remainingMs: number }>(`/api/sites/${id}/filebrowser/status`)
-      setFbStatus(res.status)
-      setFbActiveUntil(res.activeUntil)
-      setFbRemainingMs(res.remainingMs)
-    } catch {
-      setFbStatus("stopped")
-      setFbActiveUntil(null)
-      setFbRemainingMs(0)
-    }
-  }
-
-  React.useEffect(() => {
-    if (fbStatus !== "active" || !fbActiveUntil) {
-      setFbRemainingMs(0)
-      return
-    }
-    const tick = () => {
-      const remaining = new Date(fbActiveUntil).getTime() - Date.now()
-      setFbRemainingMs(Math.max(remaining, 0))
-      if (remaining <= 0) {
-        setFbStatus("stopped")
-        setFbActiveUntil(null)
-      }
-    }
-    tick()
-    const interval = setInterval(tick, 1000)
-    return () => clearInterval(interval)
-  }, [fbStatus, fbActiveUntil])
 
   async function fetchWordPressInfo() {
     setLoadingWpInfo(true)
@@ -279,28 +236,9 @@ export default function SiteDetailPage() {
     }
   }
 
-  async function activateFilebrowser() {
-    if (!site) return
-    setFbActivating(true)
-    try {
-      const res = await api.post<{ activeUntil: string }>(
-        `/api/sites/${site.id}/filebrowser/activate`,
-        { durationMinutes: fbDuration },
-      )
-      setFbStatus("active")
-      setFbActiveUntil(res.activeUntil)
-      setFbRemainingMs(new Date(res.activeUntil).getTime() - Date.now())
-      toast.success(`FileBrowser activo por ${formatDurationLabel(fbDuration)}`)
-    } catch {
-      toast.error("Error al activar FileBrowser")
-    } finally {
-      setFbActivating(false)
-    }
-  }
-
   async function openFileBrowser() {
     if (!site) return
-    setFbActivating(true)
+    setFbOpening(true)
     try {
       const res = await api.post<{ token: string; url: string }>(
         `/api/auto-login/filebrowser/${site.id}`,
@@ -309,39 +247,8 @@ export default function SiteDetailPage() {
     } catch {
       toast.error("Error al abrir FileBrowser")
     } finally {
-      setFbActivating(false)
+      setFbOpening(false)
     }
-  }
-
-  async function handleDeactivateFilebrowser() {
-    if (!site) return
-    setFbDeactivating(true)
-    try {
-      await api.post<{ message: string }>(`/api/sites/${site.id}/filebrowser/deactivate`)
-      setFbStatus("stopped")
-      setFbActiveUntil(null)
-      setFbRemainingMs(0)
-      toast.success("FileBrowser desactivado")
-    } catch {
-      toast.error("Error al desactivar FileBrowser")
-    } finally {
-      setFbDeactivating(false)
-    }
-  }
-
-  function formatDurationLabel(minutes: number): string {
-    if (minutes < 60) return `${minutes} min`
-    if (minutes < 360) return `${Math.round(minutes / 60)} hora${minutes >= 120 ? "s" : ""}`
-    return `${Math.round(minutes / 60)} horas`
-  }
-
-  function formatRemaining(ms: number): string {
-    if (ms <= 0) return "0 min"
-    const totalSec = Math.floor(ms / 1000)
-    const h = Math.floor(totalSec / 3600)
-    const m = Math.floor((totalSec % 3600) / 60)
-    if (h > 0) return `${h}h ${m}m`
-    return `${m}m`
   }
 
   async function openWpAdmin() {
@@ -971,88 +878,28 @@ export default function SiteDetailPage() {
               <CardDescription>Acceso a los archivos del sitio</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {fbStatus === "stopped" ? (
-                <>
-                  <div className="space-y-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs text-muted-foreground">Duración de la sesión</Label>
-                      <div className="flex gap-2">
-                        {[
-                          { value: 15, label: "15 min" },
-                          { value: 60, label: "1 hora" },
-                          { value: 360, label: "6 horas" },
-                        ].map((opt) => (
-                          <Button
-                            key={opt.value}
-                            variant={fbDuration === opt.value ? "default" : "outline"}
-                            size="sm"
-                            disabled={fbActivating || !isActive}
-                            onClick={() => setFbDuration(opt.value)}
-                          >
-                            {opt.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    FileBrowser se detiene automáticamente al expirar el tiempo seleccionado para ahorrar recursos.
-                  </p>
-                  <Button onClick={activateFilebrowser} disabled={fbActivating || !isActive}>
-                    {fbActivating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <FolderOpen className="mr-2 h-4 w-4" />
-                    )}
-                    {fbActivating ? "Activando..." : "Activar"}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <span className="font-medium">FileBrowser activo</span>
-                    <span className="text-muted-foreground">· expira en {formatRemaining(fbRemainingMs)}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button onClick={openFileBrowser} disabled={fbActivating}>
-                      {fbActivating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <FolderOpen className="mr-2 h-4 w-4" />
-                      )}
-                      Abrir FileBrowser
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={handleDeactivateFilebrowser}
-                      disabled={fbDeactivating}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      {fbDeactivating ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Power className="mr-2 h-4 w-4" />
-                      )}
-                      Desactivar
-                    </Button>
-                  </div>
-                  <div className="divide-y border-t pt-2">
-                    <div className="flex items-center justify-between py-3">
-                      <Label className="text-xs text-muted-foreground">URL</Label>
-                      <a href={`https://${site.subdomain}.${FILES_DOMAIN}`} target="_blank" rel="noopener noreferrer" className="font-mono text-sm hover:underline">https://{site.subdomain}.{FILES_DOMAIN}</a>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <Label className="text-xs text-muted-foreground">Usuario</Label>
-                      <p className="font-mono text-sm">admin</p>
-                    </div>
-                    <div className="space-y-2 py-3">
-                      <Label className="text-xs text-muted-foreground">Contraseña</Label>
-                      <PasswordInput value={site.fbPassword || "—"} readOnly showToggle className="font-mono text-sm" />
-                    </div>
-                  </div>
-                </>
-              )}
+              <Button variant="outline" onClick={openFileBrowser} disabled={fbOpening || !isActive}>
+                {fbOpening ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FolderOpen className="mr-2 h-4 w-4" />
+                )}
+                Abrir FileBrowser
+              </Button>
+              <div className="divide-y border-t pt-2">
+                <div className="flex items-center justify-between py-3">
+                  <Label className="text-xs text-muted-foreground">URL</Label>
+                  <a href={`https://${site.subdomain}.${FILES_DOMAIN}`} target="_blank" rel="noopener noreferrer" className="font-mono text-sm hover:underline">https://{site.subdomain}.{FILES_DOMAIN}</a>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <Label className="text-xs text-muted-foreground">Usuario</Label>
+                  <p className="font-mono text-sm">admin</p>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <Label className="text-xs text-muted-foreground">Contraseña</Label>
+                  <PasswordInput value={site.fbPassword || "—"} readOnly showToggle className="font-mono text-sm w-[180px]" />
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -1079,9 +926,9 @@ export default function SiteDetailPage() {
                   <Label className="text-xs text-muted-foreground">Usuario</Label>
                   <p className="font-mono text-sm">{site.dbUser}</p>
                 </div>
-                <div className="space-y-2 py-3">
+                <div className="flex items-center justify-between py-3">
                   <Label className="text-xs text-muted-foreground">Contraseña</Label>
-                  <PasswordInput value={site.dbPassword} readOnly showToggle className="font-mono text-sm" />
+                  <PasswordInput value={site.dbPassword} readOnly showToggle className="font-mono text-sm w-[180px]" />
                 </div>
               </div>
             </CardContent>

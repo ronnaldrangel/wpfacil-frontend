@@ -24,7 +24,7 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Trash2, RefreshCw, Loader2, ExternalLink } from "lucide-react"
+import { Trash2, RefreshCw, Loader2, ExternalLink, FolderOpen } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { PageLoader } from "@/components/page-loader"
 import { api } from "@/lib/api-client"
@@ -62,6 +62,30 @@ function DeleteSiteDialog({ siteName, onDelete }: { siteName: string; onDelete: 
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+function WpAdminButton({ siteId }: { siteId: string }) {
+  const [loading, setLoading] = React.useState(false)
+
+  async function handleOpen() {
+    setLoading(true)
+    try {
+      const res = await api.get<{ url: string }>(`/api/admin/sites/${siteId}/wp-admin`)
+      window.open(res.url, "_blank")
+    } catch {
+      toast.error("Error al abrir WP Admin")
+      const wildcard = process.env.NEXT_PUBLIC_WILDCARD_DOMAIN || "wp.wpfacil.net"
+      window.open(`https://${siteId}.${wildcard}/wp-admin`, "_blank")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <Button variant="ghost" size="icon" onClick={handleOpen} disabled={loading} title="WP Admin">
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+    </Button>
   )
 }
 
@@ -126,6 +150,7 @@ export default function AdminSitesPage() {
   React.useEffect(() => { fetchSites() }, [])
 
   const wildcard = process.env.NEXT_PUBLIC_WILDCARD_DOMAIN || "wp.wpfacil.net"
+  const FILES_DOMAIN = process.env.NEXT_PUBLIC_FILES_DOMAIN || "data.wpfacil.net"
 
   const columns = [
     { key: "name", label: "Nombre" },
@@ -185,6 +210,17 @@ export default function AdminSitesPage() {
             }}
           />
           <RedeployDialog siteName={row.name as string} siteId={row.id as string} />
+          <WpAdminButton siteId={row.id as string} />
+          <Button variant="ghost" size="icon" asChild>
+            <a
+              href={`https://${row.subdomain}.${FILES_DOMAIN}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="FileBrowser"
+            >
+              <FolderOpen className="h-4 w-4" />
+            </a>
+          </Button>
         </div>
       ),
     },
