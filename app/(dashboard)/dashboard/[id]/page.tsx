@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PasswordInput } from "@/components/ui/password-input"
+import { Switch } from "@/components/ui/switch"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -62,6 +63,7 @@ import {
   Copy,
   CheckCircle2,
   Globe,
+  AlertTriangle,
 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -124,6 +126,10 @@ export default function SiteDetailPage() {
   const [analyticsTotal, setAnalyticsTotal] = React.useState(0)
   const [timeRange, setTimeRange] = React.useState("7")
   const [loadingAnalytics, setLoadingAnalytics] = React.useState(false)
+  const [securityStatus, setSecurityStatus] = React.useState<any>(null)
+  const [loadingSecurity, setLoadingSecurity] = React.useState(false)
+  const [actionLoading, setActionLoading] = React.useState(false)
+  const [actionMessage, setActionMessage] = React.useState("")
   const [dbDomains, setDbDomains] = React.useState<any[]>([])
   const [fbOpening, setFbOpening] = React.useState(false)
 
@@ -162,6 +168,30 @@ export default function SiteDetailPage() {
   }
 
   React.useEffect(() => { fetchAnalytics(timeRange) }, [id, timeRange])
+
+  async function fetchSecurityStatus() {
+    setLoadingSecurity(true)
+    try {
+      const res = await api.get<any>(`/api/sites/${id}/security`)
+      setSecurityStatus(res)
+    } catch {
+      setSecurityStatus(null)
+    } finally {
+      setLoadingSecurity(false)
+    }
+  }
+
+  React.useEffect(() => { fetchSecurityStatus() }, [id])
+
+  const handleSecurityAction = React.useCallback(async (msg: string, promise: Promise<any>) => {
+    setActionMessage(msg)
+    setActionLoading(true)
+    try {
+      await promise
+      await fetchSecurityStatus()
+    } catch {}
+    setActionLoading(false)
+  }, [id])
 
   async function fetchWordPressInfo() {
     setLoadingWpInfo(true)
@@ -467,6 +497,7 @@ export default function SiteDetailPage() {
           <TabsTrigger value="wordpress">WordPress</TabsTrigger>
           <TabsTrigger value="dominio">Dominio</TabsTrigger>
           <TabsTrigger value="files">File & Database</TabsTrigger>
+          <TabsTrigger value="security">Seguridad</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -1020,7 +1051,101 @@ export default function SiteDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="security" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Protections</CardTitle>
+              <CardDescription>Current security measures status</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <SecurityToggle label="Firewall .htaccess" feature="firewall" enabled={securityStatus?.firewall} onAction={handleSecurityAction} />
+              <SecurityToggle label="Login Protection" feature="login_protection" enabled={securityStatus?.login_protection} onAction={handleSecurityAction} />
+              <SecurityToggle label="REST API /users" feature="rest_api_blocked" enabled={securityStatus?.rest_api_blocked} onAction={handleSecurityAction} />
+              <div className="flex items-center justify-between border-b py-3">
+                <span className="text-sm font-medium">XML-RPC</span>
+                <Badge variant={securityStatus?.xmlrpc_blocked ? "default" : "destructive"}>
+                  {securityStatus?.xmlrpc_blocked ? "Blocked" : "Not blocked"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between border-b py-3">
+                <span className="text-sm font-medium">User enumeration</span>
+                <Badge variant={securityStatus?.user_enum_blocked ? "default" : "destructive"}>
+                  {securityStatus?.user_enum_blocked ? "Blocked" : "Not blocked"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between border-b py-3">
+                <span className="text-sm font-medium">File editing</span>
+                <Badge variant={securityStatus?.file_edit_disabled ? "default" : "destructive"}>
+                  {securityStatus?.file_edit_disabled ? "Blocked" : "Not blocked"}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Security Scan</CardTitle>
+              <CardDescription>Vulnerability analysis results</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-2">
+                {(securityStatus?.scan_issues || []).length === 0 ? (
+                  <><CheckCircle2 className="size-5 text-green-500" /><span className="text-sm">File permissions are correct</span></>
+                ) : (
+                  <><AlertTriangle className="size-5 text-destructive" /><span className="text-sm">{(securityStatus?.scan_issues || []).length} permission issue(s)</span></>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {(securityStatus?.outdated_plugins || []).length === 0 ? (
+                  <><CheckCircle2 className="size-5 text-green-500" /><span className="text-sm">All plugins are up to date</span></>
+                ) : (
+                  <><AlertTriangle className="size-5 text-destructive" /><span className="text-sm">{(securityStatus?.outdated_plugins || []).length} outdated plugin(s)</span></>
+                )}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => handleSecurityAction("Scanning...", fetchSecurityStatus())} disabled={loadingSecurity}>
+                {loadingSecurity && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Re-scan
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      <AlertDialog open={actionLoading}>
+        <AlertDialogContent className="max-w-xs">
+          <div className="flex flex-col items-center gap-4 py-6">
+            <Loader2 className="size-8 animate-spin text-primary" />
+            <p className="text-sm font-medium">{actionMessage}</p>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  )
+}
+
+function SecurityToggle({ label, feature, enabled, onAction }: { label: string; feature: string; enabled?: boolean; onAction: (msg: string, promise: Promise<any>) => void }) {
+  const [currentEnabled, setCurrentEnabled] = React.useState(enabled)
+  const { id } = useParams<{ id: string }>()
+
+  React.useEffect(() => { setCurrentEnabled(enabled) }, [enabled])
+
+  async function handleToggle() {
+    const newState = !currentEnabled
+    setCurrentEnabled(newState)
+    onAction("Updating " + label + "...", (async () => {
+      try {
+        await api.post(`/api/sites/${id}/security/toggle`, { feature, enabled: newState })
+      } catch {
+        setCurrentEnabled(!newState)
+      }
+    })())
+  }
+
+  return (
+    <div className="flex items-center justify-between border-b py-3">
+      <span className="text-sm font-medium">{label}</span>
+      <Switch checked={currentEnabled} onCheckedChange={handleToggle} disabled={currentEnabled === undefined} />
     </div>
   )
 }
