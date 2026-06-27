@@ -191,7 +191,10 @@ function DashboardContent() {
   }, [searchParams])
 
   React.useEffect(() => {
-    const interval = setInterval(fetchSites, 5000)
+    const interval = setInterval(() => {
+      fetchSites()
+      fetchAvailableSlots()
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
 
