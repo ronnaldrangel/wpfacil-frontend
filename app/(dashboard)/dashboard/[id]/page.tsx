@@ -128,8 +128,6 @@ export default function SiteDetailPage() {
   const [loadingAnalytics, setLoadingAnalytics] = React.useState(false)
   const [securityStatus, setSecurityStatus] = React.useState<any>(null)
   const [loadingSecurity, setLoadingSecurity] = React.useState(false)
-  const [actionLoading, setActionLoading] = React.useState(false)
-  const [actionMessage, setActionMessage] = React.useState("")
   const [dbDomains, setDbDomains] = React.useState<any[]>([])
   const [fbOpening, setFbOpening] = React.useState(false)
 
@@ -184,13 +182,14 @@ export default function SiteDetailPage() {
   React.useEffect(() => { fetchSecurityStatus() }, [id])
 
   const handleSecurityAction = React.useCallback(async (msg: string, promise: Promise<any>) => {
-    setActionMessage(msg)
-    setActionLoading(true)
+    toast.loading(msg, { id: "security-action" })
     try {
       await promise
       await fetchSecurityStatus()
-    } catch {}
-    setActionLoading(false)
+      toast.success(msg + " Done", { id: "security-action" })
+    } catch {
+      toast.error(msg + " Failed", { id: "security-action" })
+    }
   }, [id])
 
   async function fetchWordPressInfo() {
@@ -1111,15 +1110,6 @@ export default function SiteDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <AlertDialog open={actionLoading}>
-        <AlertDialogContent className="max-w-xs">
-          <div className="flex flex-col items-center gap-4 py-6">
-            <Loader2 className="size-8 animate-spin text-primary" />
-            <p className="text-sm font-medium">{actionMessage}</p>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

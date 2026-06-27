@@ -59,6 +59,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
 
   async function handleDelete() {
     setDeleting(true)
+    await new Promise((r) => setTimeout(r, 0))
     try {
       await api.delete(`/api/sites/${site.id}`)
       addNotification(`Sitio "${site.name}" eliminado`)

@@ -57,7 +57,7 @@ function DeleteSiteDialog({ siteName, onDelete }: { siteName: string; onDelete: 
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={handleDelete} disabled={deleting}>
             {deleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Eliminar
+            {deleting ? "Eliminando..." : "Eliminar"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
