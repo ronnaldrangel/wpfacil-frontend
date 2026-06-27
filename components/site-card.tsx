@@ -65,7 +65,6 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       addNotification(`Sitio "${site.name}" eliminado`)
       toast.success("Sitio eliminado")
       if (onDelete) onDelete(site.id)
-      router.refresh()
     } catch {
       toast.error("Error al eliminar el sitio")
       setDeleting(false)
