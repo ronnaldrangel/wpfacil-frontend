@@ -283,6 +283,7 @@ export default function SiteDetailPage() {
   }
 
   async function handleDelete() {
+    sessionStorage.setItem("deleting_site", id)
     router.push("/dashboard")
     addNotification(`Sitio "${site?.name}" eliminado`)
     try {

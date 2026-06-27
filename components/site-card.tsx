@@ -51,11 +51,12 @@ interface Site {
 interface SiteCardProps {
   site: Site
   onDelete?: (id: string) => void
+  initialDeleting?: boolean
 }
 
-export function SiteCard({ site, onDelete }: SiteCardProps) {
+export function SiteCard({ site, onDelete, initialDeleting }: SiteCardProps) {
   const router = useRouter()
-  const [deleting, setDeleting] = React.useState(false)
+  const [deleting, setDeleting] = React.useState(initialDeleting || false)
 
   async function handleDelete() {
     setDeleting(true)

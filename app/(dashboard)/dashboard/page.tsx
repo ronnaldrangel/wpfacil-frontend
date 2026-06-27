@@ -89,6 +89,7 @@ function DashboardContent() {
   const [loading, setLoading] = React.useState(true)
   const [processingPayment, setProcessingPayment] = React.useState(false)
   const [availableSlots, setAvailableSlots] = React.useState<any[]>([])
+  const [deletingSites, setDeletingSites] = React.useState<string[]>([])
   const processedRef = React.useRef(false)
 
   function handleDeleteSite(id: string) {
@@ -100,6 +101,11 @@ function DashboardContent() {
     try {
       const data = await api.get<Site[]>("/api/sites")
       setSites(Array.isArray(data) ? data : [])
+      const stored = sessionStorage.getItem("deleting_site")
+      if (stored && !(Array.isArray(data) ? data : []).find((s) => s.id === stored)) {
+        sessionStorage.removeItem("deleting_site")
+        setDeletingSites((prev) => prev.filter((id) => id !== stored))
+      }
     } catch {
       setSites([])
     } finally {
@@ -117,6 +123,10 @@ function DashboardContent() {
   }
 
   React.useEffect(() => {
+    const stored = sessionStorage.getItem("deleting_site")
+    if (stored) {
+      setDeletingSites([stored])
+    }
     fetchSites()
     fetchAvailableSlots()
   }, [])
@@ -180,13 +190,10 @@ function DashboardContent() {
     })()
   }, [searchParams])
 
-  const hasDeploying = sites.some((s) => s.status === "deploying" || s.status === "provisioning")
-
   React.useEffect(() => {
-    if (!hasDeploying) return
     const interval = setInterval(fetchSites, 5000)
     return () => clearInterval(interval)
-  }, [hasDeploying])
+  }, [])
 
   if (processingPayment) {
     return (
@@ -257,7 +264,7 @@ function DashboardContent() {
 
       <div className="flex flex-col gap-4">
         {sites.map((site) => (
-          <SiteCard key={site.id} site={site} onDelete={handleDeleteSite} />
+          <SiteCard key={site.id} site={site} onDelete={handleDeleteSite} initialDeleting={deletingSites.includes(site.id)} />
         ))}
       </div>
     </div>
