@@ -167,30 +167,44 @@ export default function SiteDetailPage() {
 
   React.useEffect(() => { fetchAnalytics(timeRange) }, [id, timeRange])
 
-  async function fetchSecurityStatus() {
+  const fetchSecurityStatus = React.useCallback(async () => {
     setLoadingSecurity(true)
     try {
-      const res = await api.get<any>(`/api/sites/${id}/security`)
+      const res = await api.post<any>(`/api/sites/${id}/security/refresh`, {})
       setSecurityStatus(res)
+      return res
     } catch {
       setSecurityStatus(null)
+      return null
     } finally {
       setLoadingSecurity(false)
     }
-  }
+  }, [id])
 
-  React.useEffect(() => { fetchSecurityStatus() }, [id])
+  React.useEffect(() => { fetchSecurityStatus() }, [fetchSecurityStatus])
 
-  const handleSecurityAction = React.useCallback(async (msg: string, promise: Promise<any>) => {
+  const handleSecurityAction = React.useCallback(async (
+    msg: string,
+    promise: Promise<any>,
+    opts?: { feature?: string; expected?: boolean }
+  ) => {
     toast.loading(msg, { id: "security-action" })
     try {
       await promise
-      await fetchSecurityStatus()
+      const fresh = await fetchSecurityStatus()
+      if (opts?.feature !== undefined && opts?.expected !== undefined && fresh) {
+        const actual = (fresh as Record<string, unknown>)[opts.feature]
+        if (actual !== opts.expected) {
+          toast.warning(msg + " adjusted by server", { id: "security-action" })
+          return
+        }
+      }
       toast.success(msg + " Done", { id: "security-action" })
     } catch {
       toast.error(msg + " Failed", { id: "security-action" })
+      await fetchSecurityStatus()
     }
-  }, [id])
+  }, [fetchSecurityStatus])
 
   async function fetchWordPressInfo() {
     setLoadingWpInfo(true)
@@ -1103,7 +1117,7 @@ export default function SiteDetailPage() {
                   <><AlertTriangle className="size-5 text-destructive" /><span className="text-sm">{(securityStatus?.outdated_plugins || []).length} outdated plugin(s)</span></>
                 )}
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleSecurityAction("Scanning...", fetchSecurityStatus())} disabled={loadingSecurity}>
+              <Button variant="outline" size="sm" onClick={() => handleSecurityAction("Scanning...", (async () => { await fetchSecurityStatus() })())} disabled={loadingSecurity}>
                 {loadingSecurity && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Re-scan
               </Button>
@@ -1115,7 +1129,7 @@ export default function SiteDetailPage() {
   )
 }
 
-function SecurityToggle({ label, feature, enabled, onAction }: { label: string; feature: string; enabled?: boolean; onAction: (msg: string, promise: Promise<any>) => void }) {
+function SecurityToggle({ label, feature, enabled, onAction }: { label: string; feature: string; enabled?: boolean; onAction: (msg: string, promise: Promise<any>, opts?: { feature?: string; expected?: boolean }) => void }) {
   const [currentEnabled, setCurrentEnabled] = React.useState(enabled)
   const { id } = useParams<{ id: string }>()
 
@@ -1124,13 +1138,18 @@ function SecurityToggle({ label, feature, enabled, onAction }: { label: string; 
   async function handleToggle() {
     const newState = !currentEnabled
     setCurrentEnabled(newState)
-    onAction("Updating " + label + "...", (async () => {
-      try {
-        await api.post(`/api/sites/${id}/security/toggle`, { feature, enabled: newState })
-      } catch {
-        setCurrentEnabled(!newState)
-      }
-    })())
+    onAction(
+      "Updating " + label + "...",
+      (async () => {
+        try {
+          await api.post(`/api/sites/${id}/security/toggle`, { feature, enabled: newState })
+        } catch (e) {
+          setCurrentEnabled(!newState)
+          throw e
+        }
+      })(),
+      { feature, expected: newState }
+    )
   }
 
   return (
