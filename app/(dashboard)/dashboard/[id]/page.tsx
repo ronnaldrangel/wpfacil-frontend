@@ -342,7 +342,8 @@ export default function SiteDetailPage() {
 
   if (!site) return null
 
-  const domain = site.domain || site.customDomain || `${site.subdomain}.${WILDCARD}`
+  const primaryDomain = dbDomains.find((d: any) => d.isPrimary)?.host
+  const domain = primaryDomain || site.customDomain || `${site.subdomain}.${WILDCARD}`
   const isActive = site.status === "active"
   const isStopped = site.status === "stopped"
   const storagePercent = stats ? Math.round((stats.storageUsed / stats.storageLimit) * 100) : 0

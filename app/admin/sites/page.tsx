@@ -161,19 +161,22 @@ export default function AdminSitesPage() {
       render: (v: unknown) => (v as any)?.name || "—",
     },
     {
-      key: "subdomain",
+      key: "domain",
       label: "Dominio",
-      render: (v: unknown, row: Record<string, unknown>) => (
-        <a
-          href={`https://${(row.domain as string) || (row.customDomain as string) || `${v}.${wildcard}`}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
-        >
-          {(row.domain as string) || (row.customDomain as string) || `${v}.${wildcard}`}
-          <ExternalLink className="h-3 w-3" />
-        </a>
-      ),
+      render: (v: unknown, row: Record<string, unknown>) => {
+        const domain = (row.domain as string) || `${row.subdomain as string}.${wildcard}`
+        return (
+          <a
+            href={`https://${domain}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+          >
+            {domain}
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        )
+      },
     },
     { key: "plan", label: "Plan", className: "hidden md:table-cell", render: (v: unknown) => String(v).charAt(0).toUpperCase() + String(v).slice(1) },
     {
