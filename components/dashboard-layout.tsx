@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/sheet"
 import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell, Menu, ChevronDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { api, setToken } from "@/lib/api-client"
+import { toast } from "sonner"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -36,6 +38,8 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
   const [mounted, setMounted] = React.useState(false)
   const [navOpen, setNavOpen] = React.useState(false)
   const [notifications, setNotifications] = React.useState<{ id: number; text: string; time: string }[]>([])
+  const [impersonating, setImpersonating] = React.useState(false)
+  const [isRestoring, setIsRestoring] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
   React.useEffect(() => {
     const raw = localStorage.getItem("wpfacil_notifications")
@@ -49,14 +53,70 @@ export function DashboardLayout({ children, user, onLogout }: DashboardLayoutPro
     window.addEventListener("storage", handler)
     return () => window.removeEventListener("storage", handler)
   }, [])
+  React.useEffect(() => {
+    setImpersonating(!!localStorage.getItem("wpfacil_impersonating"))
+  }, [pathname])
 
   function clearNotifications() {
     localStorage.removeItem("wpfacil_notifications")
     setNotifications([])
   }
 
+  async function handleStopImpersonating() {
+    if (isRestoring) return
+    const impersonateToken = localStorage.getItem("wpfacil_impersonate_token")
+    if (!impersonateToken) {
+      const adminToken = localStorage.getItem("wpfacil_admin_token")
+      if (adminToken) {
+        setToken(adminToken)
+        localStorage.removeItem("wpfacil_impersonating")
+        localStorage.removeItem("wpfacil_impersonate_token")
+        localStorage.removeItem("wpfacil_admin_token")
+        setImpersonating(false)
+        router.push("/admin")
+        return
+      }
+      localStorage.removeItem("wpfacil_impersonating")
+      localStorage.removeItem("wpfacil_impersonate_token")
+      localStorage.removeItem("wpfacil_admin_token")
+      setImpersonating(false)
+      toast.error("No se encontró sesión de administrador")
+      return
+    }
+
+    setIsRestoring(true)
+    try {
+      const res = await api.post<{ token: string }>("/api/auth/restore-admin", undefined, {
+        headers: { Authorization: `Bearer ${impersonateToken}` },
+      })
+      setToken(res.token)
+      localStorage.removeItem("wpfacil_impersonating")
+      localStorage.removeItem("wpfacil_impersonate_token")
+      localStorage.removeItem("wpfacil_admin_token")
+      setImpersonating(false)
+      router.push("/admin")
+    } catch {
+      toast.error("Error al restaurar sesión de administrador")
+    } finally {
+      setIsRestoring(false)
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
+      {impersonating && (
+        <div className="shrink-0 bg-yellow-500 px-4 py-2 text-center text-sm font-medium text-yellow-950">
+          Modo Administrador - Estás impersonando a un usuario
+          <Button
+            variant="link"
+            onClick={handleStopImpersonating}
+            disabled={isRestoring}
+            className="ml-3 h-auto p-0 text-yellow-950 underline hover:no-underline"
+          >
+            {isRestoring ? "Restaurando..." : "Volver al panel admin"}
+          </Button>
+        </div>
+      )}
       <header className="flex h-14 items-center justify-center border-b bg-background px-4 lg:px-6">
         <div className="flex w-full max-w-5xl items-center justify-between">
           <div className="flex items-center gap-2">

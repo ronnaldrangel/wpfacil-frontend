@@ -20,6 +20,14 @@ function removeToken() {
   document.cookie = "wpfacil_auth=; path=/; max-age=0"
 }
 
+function clearAuth() {
+  localStorage.removeItem("wpfacil_token")
+  localStorage.removeItem("wpfacil_impersonating")
+  localStorage.removeItem("wpfacil_impersonate_token")
+  localStorage.removeItem("wpfacil_admin_token")
+  document.cookie = "wpfacil_auth=; path=/; max-age=0"
+}
+
 async function request<T>(
   method: string,
   path: string,
@@ -31,7 +39,7 @@ async function request<T>(
     "Content-Type": "application/json",
     ...options?.headers,
   }
-  if (token) {
+  if (token && !headers["Authorization"]) {
     headers["Authorization"] = `Bearer ${token}`
   }
 
@@ -65,4 +73,4 @@ const api = {
   delete: <T>(path: string, options?: ApiOptions) => request<T>("DELETE", path, undefined, options),
 }
 
-export { api, setToken, removeToken, getToken }
+export { api, setToken, removeToken, clearAuth, getToken }

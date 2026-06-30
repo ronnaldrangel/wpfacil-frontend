@@ -45,45 +45,20 @@ export default function AdminLayout({
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
-  const [impersonating, setImpersonating] = React.useState(false)
-
-  React.useEffect(() => {
-    const imp = localStorage.getItem("wpfacil_impersonating")
-    setImpersonating(!!imp)
-  }, [])
-
   function handleLogout() {
     localStorage.removeItem("wpfacil_token")
     localStorage.removeItem("wpfacil_impersonating")
-    router.push("/login")
-  }
-
-  function handleStopImpersonating() {
-    localStorage.removeItem("wpfacil_impersonating")
     localStorage.removeItem("wpfacil_impersonate_token")
-    setImpersonating(false)
-    router.push("/admin")
+    localStorage.removeItem("wpfacil_admin_token")
+    router.push("/login")
   }
 
   return (
     <div className="flex min-h-screen">
-      {impersonating && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 px-4 py-2 text-center text-sm font-medium text-yellow-950">
-          Modo Administrador - Estás impersonando a un usuario
-          <Button
-            variant="link"
-            onClick={handleStopImpersonating}
-            className="ml-3 h-auto p-0 text-yellow-950 underline hover:no-underline"
-          >
-            Volver al panel admin
-          </Button>
-        </div>
-      )}
-
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r bg-background transition-transform lg:static lg:translate-x-0",
-          impersonating ? "top-10" : "top-0",
+          "top-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -134,12 +109,12 @@ export default function AdminLayout({
       )}
 
       <div className="flex flex-1 flex-col">
-        <header
-          className={cn(
-            "flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6",
-            impersonating && "mt-10"
-          )}
-        >
+      <header
+        className={cn(
+          "flex h-14 items-center justify-between border-b bg-background px-4 lg:px-6",
+          ""
+        )}
+      >
           <Button
             variant="ghost"
             size="icon"

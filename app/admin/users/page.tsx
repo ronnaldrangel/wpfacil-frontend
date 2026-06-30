@@ -157,10 +157,16 @@ export default function AdminUsersPage() {
 
   async function handleImpersonate(userId: string) {
     try {
-      const res = await api.post<{ token: string }>(`/api/auth/impersonate/${userId}`)
+      const currentToken = localStorage.getItem("wpfacil_token")
+      const res = await api.post<{ token: string; adminToken?: string }>(`/api/auth/impersonate/${userId}`)
       setToken(res.token)
       localStorage.setItem("wpfacil_impersonating", userId)
       localStorage.setItem("wpfacil_impersonate_token", res.token)
+      if (res.adminToken) {
+        localStorage.setItem("wpfacil_admin_token", res.adminToken)
+      } else if (currentToken) {
+        localStorage.setItem("wpfacil_admin_token", currentToken)
+      }
       toast.success("Impersonando usuario")
       router.push("/dashboard")
     } catch {

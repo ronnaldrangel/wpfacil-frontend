@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { getToken, removeToken, api } from "@/lib/api-client"
+import { getToken, api, clearAuth } from "@/lib/api-client"
 import { Loader2 } from "lucide-react"
 
 export default function DashboardRootLayout({
@@ -44,7 +44,7 @@ export default function DashboardRootLayout({
           isAdmin: data.isAdmin,
         })
       } catch {
-        removeToken()
+        clearAuth()
         router.push("/login")
       } finally {
         setLoading(false)
@@ -54,7 +54,7 @@ export default function DashboardRootLayout({
   }, [router, pathname])
 
   function handleLogout() {
-    removeToken()
+    clearAuth()
     router.push("/login")
   }
 
