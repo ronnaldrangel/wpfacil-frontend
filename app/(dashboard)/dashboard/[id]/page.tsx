@@ -247,7 +247,10 @@ export default function SiteDetailPage() {
       if (res.verified) {
         toast.success("Dominio verificado correctamente")
       } else {
-        toast.error("El dominio no apunta a WPFacil. Revisa la configuración DNS.")
+        const recordsInfo = res.records?.length
+          ? ` Registros encontrados: ${res.records.join(", ")}`
+          : " No se encontraron registros A."
+        toast.error(`El dominio no apunta a WPFacil.${recordsInfo}`)
       }
     } catch {
       toast.error("Error al verificar el dominio")
@@ -789,23 +792,23 @@ export default function SiteDetailPage() {
                         Apunta tu dominio a WPFacil
                       </div>
                       <p className="text-xs text-muted-foreground -mt-1 ml-7">
-                        Crea un registro CNAME en tu DNS para apuntar tu dominio a este sitio.
+                        Crea un registro A en tu DNS para apuntar tu dominio a este sitio.
                       </p>
                       <div className="rounded-md border bg-muted p-3 font-mono text-xs space-y-1">
-                        <div>Tipo: <span className="font-semibold">CNAME</span></div>
+                        <div>Tipo: <span className="font-semibold">A</span></div>
                         <div>Nombre: <span className="font-semibold">@</span></div>
-                        <div>Apunta a: <span className="font-semibold">wp.wpfacil.net</span></div>
+                        <div>Valor: <span className="font-semibold">{SERVER_IP}</span></div>
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          navigator.clipboard.writeText("wp.wpfacil.net")
+                          navigator.clipboard.writeText(SERVER_IP)
                           toast.success("Copiado al portapapeles")
                         }}
                       >
                         <Copy className="mr-2 h-3 w-3" />
-                        Copiar
+                        Copiar IP
                       </Button>
                     </div>
 
