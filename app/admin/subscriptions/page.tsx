@@ -96,7 +96,7 @@ function EditSubscriptionDialog({ sub, onSave }: { sub: any; onSave: () => Promi
                   <div>
                     <p className="text-sm font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"}
+                      ${Number(p.monthlyPrice).toFixed(2)} / mes · ${Number(p.annualPrice).toFixed(2)} / año
                     </p>
                   </div>
                   {plan === p.slug && <div className="h-2 w-2 rounded-full bg-primary" />}
@@ -345,7 +345,7 @@ function CreateSubscriptionDialog({ onCreated }: { onCreated: () => Promise<void
                   <div>
                     <p className="text-sm font-medium">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      ${Number(p.price).toFixed(2)} / {p.period === "annual" ? "año" : "mes"} · {Math.round(p.maxStorage / 1024)} GB
+                      ${Number(p.monthlyPrice).toFixed(2)} / mes · ${Number(p.annualPrice).toFixed(2)} / año · {Math.round(p.maxStorage / 1024)} GB
                     </p>
                   </div>
                   {plan === p.slug && <div className="h-2 w-2 rounded-full bg-primary" />}
