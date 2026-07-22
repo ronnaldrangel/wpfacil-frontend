@@ -21,7 +21,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { LogOut, User, CreditCard, Shield, Sun, Moon, Bell, Menu, ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { api, setToken } from "@/lib/api-client"
 import { toast } from "sonner"
 

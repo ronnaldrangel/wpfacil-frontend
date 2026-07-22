@@ -3,6 +3,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 interface ApiOptions {
   headers?: Record<string, string>
   params?: Record<string, string>
+  signal?: AbortSignal
 }
 
 function getToken(): string | null {
@@ -49,16 +50,20 @@ async function request<T>(
     url += `?${searchParams.toString()}`
   }
 
+  const timeout = AbortSignal.timeout(20_000)
+  const signal = options?.signal ? AbortSignal.any([options.signal, timeout]) : timeout
   const res = await fetch(url, {
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
     cache: "no-store",
+    signal,
   })
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: "Error de conexión" }))
-    throw new Error(error.message || `Error ${res.status}`)
+    const message = Array.isArray(error.message) ? error.message.join(", ") : error.message
+    throw new Error(message || `Error ${res.status}`)
   }
 
   if (res.status === 204) return undefined as T

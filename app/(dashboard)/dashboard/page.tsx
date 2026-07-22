@@ -20,7 +20,7 @@ interface Site {
   subdomain: string
   domain?: string
   plan: string
-  status: "provisioning" | "deploying" | "active" | "stopped" | "error"
+  status: "queued" | "provisioning" | "deploying" | "active" | "stopped" | "error" | "failed" | "suspended"
   pattern?: string
   createdAt: string
 }
@@ -142,7 +142,6 @@ function DashboardContent() {
     const wpTitle = sessionStorage.getItem("wpfacil_create_wpTitle") || name || ""
     const wpAdminUser = sessionStorage.getItem("wpfacil_create_wpAdminUser") || ""
     const wpAdminEmail = sessionStorage.getItem("wpfacil_create_wpAdminEmail") || ""
-    const wpAdminPassword = sessionStorage.getItem("wpfacil_create_wpAdminPassword") || ""
     if (!name || !subdomain || !plan) return
 
     processedRef.current = true
@@ -155,28 +154,27 @@ function DashboardContent() {
           toast.error("El pago no fue completado")
           return
         }
+        const slots = await api.get<Array<{ id: string; plan: string }>>("/api/subscriptions/available-slots")
+        const slot = slots.find((candidate) => candidate.plan === plan)
+        if (!slot) {
+          toast.error("Tu pago está siendo confirmado. Intenta nuevamente en unos segundos.")
+          return
+        }
         const site = await api.post<{ id: string }>("/api/sites", {
           name,
           subdomain,
           plan,
+          slotId: slot.id,
           wpTitle,
           wpAdminUser,
           wpAdminEmail,
-          wpAdminPassword,
         })
-        try {
-          await api.post("/api/stripe/attach-subscription", { sessionId, siteId: site.id })
-        } catch (err: any) {
-          console.error("attach-subscription error", err)
-          toast.error(err?.message || "Error al vincular la suscripción")
-        }
         sessionStorage.removeItem("wpfacil_create_name")
         sessionStorage.removeItem("wpfacil_create_subdomain")
         sessionStorage.removeItem("wpfacil_create_plan")
         sessionStorage.removeItem("wpfacil_create_wpTitle")
         sessionStorage.removeItem("wpfacil_create_wpAdminUser")
         sessionStorage.removeItem("wpfacil_create_wpAdminEmail")
-        sessionStorage.removeItem("wpfacil_create_wpAdminPassword")
         addNotification(`Sitio "${name}" creado exitosamente`)
         toast.success("Sitio creado. Desplegando...")
         router.replace("/dashboard")
@@ -191,12 +189,15 @@ function DashboardContent() {
   }, [searchParams])
 
   React.useEffect(() => {
+    const hasPendingSites = sites.some((site) => ["queued", "provisioning", "deploying"].includes(site.status))
+    if (!hasPendingSites) return
     const interval = setInterval(() => {
+      if (document.visibilityState !== "visible") return
       fetchSites()
       fetchAvailableSlots()
-    }, 5000)
+    }, 15_000)
     return () => clearInterval(interval)
-  }, [])
+  }, [sites])
 
   if (processingPayment) {
     return (

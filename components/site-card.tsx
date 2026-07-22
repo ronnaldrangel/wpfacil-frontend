@@ -15,11 +15,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { SiteStatusBadge } from "@/components/site-status-badge"
-import { ExternalLink, Settings, Trash2, MoreVertical, ArrowUpRight, AlertTriangle, Clock, Loader2 } from "lucide-react"
+import { ExternalLink, Settings, Trash2, MoreVertical, ArrowUpRight, AlertTriangle, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { api } from "@/lib/api-client"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
 import { addNotification } from "@/lib/notifications"
 import {
   DropdownMenu,
@@ -37,7 +36,7 @@ interface Site {
   subdomain: string
   domain?: string
   plan: string
-  status: "provisioning" | "deploying" | "active" | "stopped" | "error" | "suspended"
+  status: "queued" | "provisioning" | "deploying" | "active" | "stopped" | "error" | "failed" | "suspended"
   pattern?: string
   createdAt: string
   subscription?: {
@@ -55,7 +54,6 @@ interface SiteCardProps {
 }
 
 export function SiteCard({ site, onDelete, initialDeleting }: SiteCardProps) {
-  const router = useRouter()
   const [deleting, setDeleting] = React.useState(initialDeleting || false)
 
   async function handleDelete() {

@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CreateSiteSteps } from "@/components/create-site-steps"
 import { PeriodToggle } from "@/components/period-toggle"
@@ -40,9 +39,11 @@ export default function CreateSitePage() {
 
 function generatePassword(length = 16): string {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
+  const values = new Uint32Array(length)
+  crypto.getRandomValues(values)
   let pwd = ""
   for (let i = 0; i < length; i++) {
-    pwd += chars.charAt(Math.floor(Math.random() * chars.length))
+    pwd += chars.charAt(values[i] % chars.length)
   }
   return pwd
 }
@@ -63,7 +64,6 @@ function CreateSiteContent() {
   const [form, setForm] = React.useState({
     name: "",
     subdomain: "",
-    useCustomDomain: false,
     wpTitle: "",
     wpAdminUser: "",
     wpAdminEmail: "",
@@ -94,7 +94,9 @@ function CreateSiteContent() {
   React.useEffect(() => {
     if (step === 4 && !randomSuffix) {
       const prefix = form.name ? slugify(form.name) : "sitio"
-      const suffix = Math.random().toString(36).substring(2, 8)
+      const values = new Uint8Array(4)
+      crypto.getRandomValues(values)
+      const suffix = Array.from(values, (value) => value.toString(16).padStart(2, "0")).join("")
       setFreePrefix(prefix)
       setRandomSuffix(suffix)
       setForm((prev) => ({ ...prev, subdomain: `${prefix}-${suffix}` }))
@@ -189,7 +191,6 @@ function CreateSiteContent() {
       sessionStorage.setItem("wpfacil_create_wpTitle", form.wpTitle)
       sessionStorage.setItem("wpfacil_create_wpAdminUser", form.wpAdminUser)
       sessionStorage.setItem("wpfacil_create_wpAdminEmail", form.wpAdminEmail)
-      sessionStorage.setItem("wpfacil_create_wpAdminPassword", form.wpAdminPassword)
       const res = await api.post<{ url: string }>("/api/stripe/checkout", {
         planId: plan.id,
         period,

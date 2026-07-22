@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   Card,
@@ -23,7 +23,6 @@ import { toast } from "sonner"
 
 function ResetForm() {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const [password, setPassword] = React.useState("")
   const [confirm, setConfirm] = React.useState("")
   const [loading, setLoading] = React.useState(false)
@@ -33,7 +32,10 @@ function ResetForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!password || password.length < 6) { toast.error("La contraseña debe tener al menos 6 caracteres"); return }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!?<>@#$%]).{8,}$/.test(password)) {
+      toast.error("Usa 8+ caracteres con mayúscula, minúscula, número y carácter especial")
+      return
+    }
     if (password !== confirm) { toast.error("Las contraseñas no coinciden"); return }
     setLoading(true)
     try {

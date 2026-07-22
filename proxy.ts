@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server"
 
 const authPages = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email"]
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const hasAuth = request.cookies.has("wpfacil_auth")
 

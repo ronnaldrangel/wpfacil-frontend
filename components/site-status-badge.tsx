@@ -3,13 +3,18 @@
 import { cn } from "@/lib/utils"
 
 interface SiteStatusBadgeProps {
-  status: "provisioning" | "deploying" | "active" | "stopped" | "error" | "suspended"
+  status: "queued" | "provisioning" | "deploying" | "active" | "stopped" | "error" | "failed" | "suspended"
 }
 
 export function SiteStatusBadge({ status }: SiteStatusBadgeProps) {
   const config: Record<string, { label: string; class: string; animate: boolean }> = {
     provisioning: {
       label: "Provisionando",
+      class: "text-yellow-600 dark:text-yellow-400",
+      animate: true,
+    },
+    queued: {
+      label: "En cola",
       class: "text-yellow-600 dark:text-yellow-400",
       animate: true,
     },
@@ -30,6 +35,11 @@ export function SiteStatusBadge({ status }: SiteStatusBadgeProps) {
     },
     error: {
       label: "Error",
+      class: "text-red-600 dark:text-red-400",
+      animate: false,
+    },
+    failed: {
+      label: "Fallido",
       class: "text-red-600 dark:text-red-400",
       animate: false,
     },
@@ -55,7 +65,7 @@ export function SiteStatusBadge({ status }: SiteStatusBadgeProps) {
           className={cn(
             "inline-block h-2 w-2 rounded-full",
             status === "active" && "bg-green-500",
-            status === "error" && "bg-red-500",
+            (status === "error" || status === "failed") && "bg-red-500",
             status === "stopped" && "bg-gray-400",
             status === "suspended" && "bg-orange-500"
           )}

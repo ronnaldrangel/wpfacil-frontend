@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PasswordInput } from "@/components/ui/password-input"
 import { Switch } from "@/components/ui/switch"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
@@ -50,7 +49,6 @@ import {
   ArrowLeft,
   ExternalLink,
   FolderOpen,
-  Database,
   Trash2,
   RefreshCw,
   Square,
@@ -68,7 +66,6 @@ import {
 import Link from "next/link"
 import { toast } from "sonner"
 
-const PMA_URL = process.env.NEXT_PUBLIC_PMA_URL || "https://db.wpfacil.net"
 const WILDCARD = process.env.NEXT_PUBLIC_WILDCARD_DOMAIN || "wp.wpfacil.net"
 const FILES_DOMAIN = process.env.NEXT_PUBLIC_FILES_DOMAIN || "data.wpfacil.net"
 const SERVER_IP = process.env.NEXT_PUBLIC_SERVER_IP || "38.224.68.30"
@@ -99,11 +96,6 @@ interface Site {
   status: string
   pattern?: string
   createdAt: string
-  dbName: string
-  dbUser: string
-  dbPassword: string
-  fbPassword?: string
-  autologinSecret?: string
 }
 
 export default function SiteDetailPage() {
@@ -580,23 +572,6 @@ export default function SiteDetailPage() {
                   </div>
                 }
               />
-              {site.autologinSecret && (
-                <InfoRow
-                  label="Auto-login Token"
-                  value={
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(site.autologinSecret || "")
-                        toast.success("Token copiado")
-                      }}
-                      className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline max-w-[200px] truncate inline-block"
-                      title={site.autologinSecret}
-                    >
-                      {site.autologinSecret?.substring(0, 16)}...
-                    </button>
-                  }
-                />
-              )}
             </CardContent>
           </Card>
 
@@ -1030,10 +1005,6 @@ export default function SiteDetailPage() {
                   <Label className="text-xs text-muted-foreground">Usuario</Label>
                   <p className="font-mono text-sm">admin</p>
                 </div>
-                <div className="flex items-center justify-between py-3">
-                  <Label className="text-xs text-muted-foreground">Contraseña</Label>
-                  <PasswordInput value={site.fbPassword || "—"} readOnly showToggle className="font-mono text-sm w-[180px]" />
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -1041,31 +1012,12 @@ export default function SiteDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Base de Datos</CardTitle>
-              <CardDescription>Usa estas credenciales en phpMyAdmin</CardDescription>
+              <CardDescription>Las credenciales se administran de forma segura por la plataforma.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button variant="outline" onClick={() => window.open(PMA_URL, "_blank")}>
-                <Database className="mr-2 h-4 w-4" />
-                Abrir phpMyAdmin
-              </Button>
-              <div className="divide-y border-t pt-2">
-                <div className="flex items-center justify-between py-3">
-                  <Label className="text-xs text-muted-foreground">Servidor</Label>
-                  <a href={PMA_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-sm hover:underline">{PMA_URL.replace(/^https?:\/\//, "")}</a>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <Label className="text-xs text-muted-foreground">Base de datos</Label>
-                  <p className="font-mono text-sm">{site.dbName}</p>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <Label className="text-xs text-muted-foreground">Usuario</Label>
-                  <p className="font-mono text-sm">{site.dbUser}</p>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <Label className="text-xs text-muted-foreground">Contraseña</Label>
-                  <PasswordInput value={site.dbPassword} readOnly showToggle className="font-mono text-sm w-[180px]" />
-                </div>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                El acceso directo a la base de datos no está expuesto en el panel para proteger las credenciales del sitio.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
